@@ -1,125 +1,730 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Brewfather Inventory</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brewfather</title>
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --bg: #0f1117; --surface: #1a1d27; --surface2: #22263a;
-  --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.18);
-  --text: #f0f0f5; --muted: #7a7d99; --accent: #e8a13a;
-  --danger: #e05050; --success: #4aaa70; --warn: #e0a030;
-  --hop-bg: #1a2e1d; --hop: #3a7d44;
-  --malt-bg: #2e2010; --malt: #8a5a2a;
-  --yeast-bg: #1a1530; --yeast: #4a3a8a;
-  --misc-bg: #102030; --misc: #3a6a7a;
-  --font: 'DM Sans', sans-serif; --mono: 'DM Mono', monospace;
-  --radius: 12px; --radius-sm: 8px;
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #111;
+  color: #eee;
+  min-height: 100vh;
 }
-body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; display: flex; justify-content: center; }
-.app { width: 100%; max-width: 520px; min-height: 100vh; display: flex; flex-direction: column; }
+.app {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 0 16px 80px 16px;
+}
+h1 {
+  font-size: 18px;
+  font-weight: 600;
+  padding: 20px 0 4px 0;
+}
+.subtitle {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 20px;
+}
+.screen { display: none; }
+.screen.active { display: block; }
 
-/* Topbar */
-.topbar { display: flex; align-items: center; gap: 10px; padding: 1.25rem 1.25rem 0; margin-bottom: 1.25rem; }
-.topbar-icon { width: 30px; height: 30px; background: var(--accent); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
-.topbar h1 { font-family: var(--mono); font-size: 14px; font-weight: 500; color: var(--text); }
-.back-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; padding: 0 4px 0 0; line-height: 1; flex-shrink: 0; }
-.back-btn:hover { color: var(--text); }
+/* Back button */
+.back {
+  background: none;
+  border: none;
+  color: #e8a13a;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 16px 0 8px 0;
+  display: block;
+}
 
-/* Screens */
-.screen { display: none; padding: 0 1.25rem 2rem; flex: 1; flex-direction: column; }
-.screen.active { display: flex; }
+/* Big menu buttons on home screen */
+.menu-btn {
+  width: 100%;
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 18px 16px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  text-align: left;
+  color: #eee;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.menu-btn:hover { background: #252525; border-color: #444; }
+.menu-btn .icon { font-size: 26px; }
+.menu-btn .label { font-size: 15px; font-weight: 600; }
+.menu-btn .desc { font-size: 12px; color: #888; margin-top: 3px; }
 
-/* Typography */
-.section-label { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.6rem; }
-.sub-text { font-size: 14px; color: var(--muted); margin-bottom: 1.1rem; line-height: 1.6; }
-
-/* Fields */
-.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1rem; }
-.field label { font-size: 13px; color: var(--muted); font-family: var(--mono); }
-.field input { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: var(--mono); font-size: 14px; padding: 10px 12px; outline: none; transition: border-color 0.15s; width: 100%; }
-.field input:focus { border-color: var(--accent); }
-.hint { font-size: 12px; color: var(--muted); line-height: 1.5; }
+/* Form fields */
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 12px; color: #888; margin-bottom: 5px; }
+.field input {
+  width: 100%;
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #eee;
+  font-size: 14px;
+  padding: 10px 12px;
+  outline: none;
+}
+.field input:focus { border-color: #e8a13a; }
+.hint { font-size: 12px; color: #666; margin-top: 4px; line-height: 1.5; }
 
 /* Buttons */
-.btn { width: 100%; padding: 13px; border-radius: var(--radius-sm); border: 1px solid var(--border2); background: var(--surface); color: var(--text); font-family: var(--font); font-size: 15px; font-weight: 500; cursor: pointer; transition: background 0.15s; margin-top: 0.5rem; }
-.btn:hover { background: var(--surface2); }
-.btn:disabled { opacity: 0.35; cursor: not-allowed; }
-.btn-accent { background: var(--accent); border-color: var(--accent); color: #0f1117; }
-.btn-accent:hover { background: #f0b050; border-color: #f0b050; }
-.btn-danger { border-color: rgba(224,80,80,0.4); color: var(--danger); }
-.btn-danger:hover:not(:disabled) { background: rgba(224,80,80,0.1); }
-.btn-success { border-color: rgba(74,170,112,0.4); color: var(--success); }
-.btn-success:hover:not(:disabled) { background: rgba(74,170,112,0.1); }
-.btn-small { font-size: 13px; padding: 9px; margin-top: 0.75rem; color: var(--muted); border-color: var(--border); }
-.btn-row { display: flex; gap: 8px; margin-top: 0.5rem; }
-.btn-row .btn { margin-top: 0; }
+.btn {
+  display: block;
+  width: 100%;
+  padding: 13px;
+  border-radius: 8px;
+  border: 1px solid #444;
+  background: #1e1e1e;
+  color: #eee;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 10px;
+  text-align: center;
+}
+.btn:hover:not(:disabled) { background: #252525; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-orange { background: #e8a13a; border-color: #e8a13a; color: #111; }
+.btn-orange:hover:not(:disabled) { background: #f0b050; }
+.btn-red { border-color: #c04040; color: #e05050; }
+.btn-red:hover:not(:disabled) { background: #2a1515; }
+.btn-small { font-size: 13px; padding: 9px; color: #666; border-color: #2a2a2a; margin-top: 8px; }
 
 /* Recipe cards */
 .recipe-card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 0.9rem 1.1rem;
-  margin-bottom: 8px; cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
-  display: flex; align-items: center; gap: 12px; user-select: none;
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
-.recipe-card:hover { border-color: var(--border2); background: var(--surface2); }
-.recipe-card.selected { border-color: var(--accent); background: rgba(232,161,58,0.06); }
-.recipe-card-check {
-  width: 20px; height: 20px; border-radius: 5px; border: 1px solid var(--border2);
-  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
-  font-size: 12px; transition: background 0.15s, border-color 0.15s;
+.recipe-card:hover { background: #222; border-color: #444; }
+.recipe-card.selected { border-color: #e8a13a; background: #201a10; }
+.checkbox {
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  border: 1.5px solid #444;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
 }
-.recipe-card.selected .recipe-card-check { background: var(--accent); border-color: var(--accent); color: #0f1117; }
-.recipe-card-info { flex: 1; min-width: 0; }
-.recipe-card-info h2 { font-size: 15px; font-weight: 500; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.recipe-card-info p { font-size: 12px; color: var(--muted); }
+.recipe-card.selected .checkbox { background: #e8a13a; border-color: #e8a13a; color: #111; }
+.recipe-name { font-size: 14px; font-weight: 500; }
+.recipe-meta { font-size: 12px; color: #666; margin-top: 2px; }
 
-/* Selection bar */
-.selection-bar {
-  position: sticky; bottom: 0; background: var(--bg);
-  padding: 0.75rem 0 0; margin-top: auto;
-  border-top: 1px solid var(--border);
+/* Sticky bottom */
+.sticky {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: #111;
+  border-top: 1px solid #222;
+  padding: 10px 16px 16px;
+  max-width: 500px;
+  margin: 0 auto;
 }
-.selection-count { font-size: 13px; color: var(--muted); margin-bottom: 6px; font-family: var(--mono); }
+.sticky-inner { max-width: 500px; margin: 0 auto; }
+.sel-count { font-size: 12px; color: #666; margin-bottom: 6px; }
 
 /* Ingredient rows */
-.ing-list { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 1rem; }
-.ing-row { display: flex; align-items: center; gap: 8px; padding: 10px 1rem; border-bottom: 1px solid var(--border); }
-.ing-row:last-child { border-bottom: none; }
-.ing-name { flex: 1; font-size: 13px; min-width: 0; }
-.ing-name small { display: block; font-size: 11px; color: var(--muted); margin-top: 1px; font-family: var(--mono); }
-.ing-badge { font-size: 10px; font-family: var(--mono); padding: 2px 5px; border-radius: 4px; font-weight: 500; white-space: nowrap; flex-shrink: 0; }
-.badge-hop { background: var(--hop-bg); color: #6dcc80; border: 1px solid var(--hop); }
-.badge-malt { background: var(--malt-bg); color: #e0a060; border: 1px solid var(--malt); }
-.badge-yeast { background: var(--yeast-bg); color: #a080e0; border: 1px solid var(--yeast); }
-.badge-misc { background: var(--misc-bg); color: #60b0cc; border: 1px solid var(--misc); }
-.ing-status { font-size: 12px; font-family: var(--mono); white-space: nowrap; flex-shrink: 0; }
-.ing-status.ok { color: var(--success); }
-.ing-status.low { color: var(--warn); }
-.ing-status.missing { color: var(--danger); }
-.ing-input { width: 62px; padding: 4px 7px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: var(--mono); font-size: 13px; text-align: right; outline: none; }
-.ing-input:focus { border-color: var(--accent); }
-.ing-unit { font-size: 11px; color: var(--muted); font-family: var(--mono); min-width: 18px; flex-shrink: 0; }
+.ing-section { margin-bottom: 16px; }
+.ing-section-title {
+  font-size: 11px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+.ing-row {
+  background: #1e1e1e;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ing-name { flex: 1; font-size: 14px; min-width: 0; }
+.ing-sub { font-size: 11px; color: #666; margin-top: 2px; }
+.ing-status { font-size: 12px; font-weight: 500; white-space: nowrap; flex-shrink: 0; }
+.ok { color: #4aaa70; }
+.warn { color: #e0a030; }
+.bad { color: #e05050; }
+.ing-input {
+  width: 65px;
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 6px;
+  color: #eee;
+  font-size: 13px;
+  padding: 5px 8px;
+  text-align: right;
+  outline: none;
+  flex-shrink: 0;
+}
+.ing-input:focus { border-color: #e8a13a; }
+.ing-unit { font-size: 12px; color: #666; flex-shrink: 0; min-width: 20px; }
 
-/* Recipe columns for side-by-side check */
-.recipe-columns { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 1rem; }
-.recipe-column { flex: 0 0 260px; }
-.recipe-column-header { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius) var(--radius) 0 0; padding: 10px 12px; border-bottom: none; }
-.recipe-column-header h3 { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.recipe-column-header p { font-size: 11px; color: var(--muted); margin-top: 2px; }
-.recipe-column .ing-list { border-radius: 0 0 var(--radius) var(--radius); margin-bottom: 0; }
-.recipe-column .ing-row { padding: 8px 10px; }
-
-/* Summary pills */
-.summary-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem; }
-.pill { font-size: 12px; font-family: var(--mono); padding: 4px 10px; border-radius: 20px; }
-.pill-ok { background: rgba(74,170,112,0.12); color: var(--success); border: 1px solid rgba(74,170,112,0.3); }
-.pill-warn { background: rgba(224,160,48,0.12); color: var(--warn); border: 1px solid rgba(224,160,48,0.3); }
-.pill-danger { background: rgba(224,80,80,0.12); color: var(--danger); border: 1px solid rgba(224,80,80,0.3); }
+/* Link cards */
+.link-card {
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 10px;
+}
+.link-card h3 { font-size: 14px; font-weight: 500; margin-bottom: 8px; }
+.link-card select {
+  width: 100%;
+  background: #111;
+  border: 1px solid #444;
+  border-radius: 6px;
+  color: #eee;
+  font-size: 13px;
+  padding: 8px 10px;
+  outline: none;
+}
 
 /* Alerts */
-.alert { border
+.alert {
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+.alert-warn { background: #2a2000; border: 1px solid #604010; color: #e0a030; }
+.alert-err  { background: #2a1010; border: 1px solid #602020; color: #e05050; }
+.alert-ok   { background: #102010; border: 1px solid #205030; color: #4aaa70; }
+
+/* Pills */
+.pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.pill { font-size: 12px; padding: 4px 10px; border-radius: 20px; }
+.pill-ok      { background: #102010; border: 1px solid #205030; color: #4aaa70; }
+.pill-warn    { background: #2a2000; border: 1px solid #604010; color: #e0a030; }
+.pill-missing { background: #2a1010; border: 1px solid #602020; color: #e05050; }
+
+/* Loading */
+.loading { text-align: center; padding: 40px; color: #666; font-size: 14px; }
+
+/* Success */
+.success { text-align: center; padding: 60px 20px; }
+.success .icon { font-size: 56px; margin-bottom: 16px; }
+.success h2 { font-size: 20px; margin-bottom: 8px; }
+.success p { font-size: 14px; color: #888; margin-bottom: 24px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SETUP -->
+<div id="screen-setup" class="screen active">
+  <h1>🍺 Brewfather</h1>
+  <p class="subtitle">Enter your Brewfather API credentials to get started.</p>
+  <div class="field">
+    <label>User ID</label>
+    <input type="text" id="setup-user" placeholder="Your Brewfather user ID" autocomplete="off">
+  </div>
+  <div class="field">
+    <label>API Key</label>
+    <input type="password" id="setup-key" placeholder="Your API key" autocomplete="off">
+    <div class="hint">Find in Brewfather → Settings → Security. Enable API and create a key with recipes.read and inventory read + write.</div>
+  </div>
+  <div id="setup-err" class="alert alert-err" style="display:none"></div>
+  <button class="btn btn-orange" onclick="doConnect()">Connect</button>
+</div>
+
+<!-- HOME -->
+<div id="screen-home" class="screen">
+  <h1>🍺 Brewfather</h1>
+  <p class="subtitle">What do you want to do?</p>
+  <button class="menu-btn" onclick="startFlow('check')">
+    <span class="icon">🔍</span>
+    <div>
+      <div class="label">Check recipe ingredients</div>
+      <div class="desc">See if you have enough stock for one or more recipes</div>
+    </div>
+  </button>
+  <button class="menu-btn" onclick="startFlow('deduct')">
+    <span class="icon">➖</span>
+    <div>
+      <div class="label">Deduct from inventory</div>
+      <div class="desc">Subtract used ingredients after brewing</div>
+    </div>
+  </button>
+  <button class="btn btn-small" onclick="showSetup()">⚙ Change credentials</button>
+</div>
+
+<!-- SELECT RECIPES -->
+<div id="screen-select" class="screen">
+  <button class="back" onclick="show('screen-home')">← Back</button>
+  <h1 id="select-title">Select recipes</h1>
+  <p class="subtitle" id="select-sub"></p>
+  <div id="recipe-list"><div class="loading">Loading recipes…</div></div>
+  <div style="height:90px"></div>
+  <div class="sticky">
+    <div class="sticky-inner">
+      <div class="sel-count" id="sel-count">No recipes selected</div>
+      <button class="btn btn-orange" id="sel-btn" disabled onclick="onSelectionDone()">Continue →</button>
+    </div>
+  </div>
+</div>
+
+<!-- LINK INGREDIENTS -->
+<div id="screen-link" class="screen">
+  <button class="back" onclick="show('screen-select')">← Back</button>
+  <h1>Link ingredients</h1>
+  <p class="subtitle">These ingredients couldn't be matched automatically. Link them to your inventory once — it's saved for next time.</p>
+  <div id="link-list"></div>
+  <button class="btn btn-orange" onclick="onLinkDone()">Save & Continue →</button>
+  <button class="btn btn-small" onclick="onLinkDone()">Skip unmatched</button>
+</div>
+
+<!-- CHECK RESULTS -->
+<div id="screen-check" class="screen">
+  <button class="back" onclick="show('screen-home')">← Back to menu</button>
+  <h1>Ingredient check</h1>
+  <div id="check-pills" class="pills"></div>
+  <div id="check-body"></div>
+</div>
+
+<!-- DEDUCT CONFIRM -->
+<div id="screen-deduct" class="screen">
+  <button class="back" onclick="show('screen-home')">← Back to menu</button>
+  <h1>Deduct from inventory</h1>
+  <p class="subtitle">Adjust any amounts if needed, then hit deduct.</p>
+  <div id="deduct-warn"></div>
+  <div id="deduct-body"></div>
+  <div id="deduct-err" class="alert alert-err" style="display:none"></div>
+  <button class="btn btn-red" onclick="doDeduct()">Deduct from inventory →</button>
+</div>
+
+<!-- SUCCESS -->
+<div id="screen-success" class="screen">
+  <div class="success">
+    <div class="icon">✅</div>
+    <h2>Done!</h2>
+    <p id="success-msg"></p>
+    <button class="btn" onclick="show('screen-home')" style="max-width:200px;margin:0 auto;">Back to menu</button>
+  </div>
+</div>
+
+</div><!-- .app -->
+<script>
+var userId = localStorage.getItem('bf_user') || '';
+var apiKey  = localStorage.getItem('bf_key')  || '';
+var flow = '';
+var allRecipes = [];
+var selected = {};
+var inventory = {};
+var links = JSON.parse(localStorage.getItem('bf_links') || '{}');
+var merged = [];
+var recipeDetails = [];
+
+function show(id) {
+  var screens = document.querySelectorAll('.screen');
+  for (var i = 0; i < screens.length; i++) screens[i].classList.remove('active');
+  document.getElementById(id).classList.add('active');
+}
+
+function showSetup() {
+  document.getElementById('setup-user').value = userId;
+  document.getElementById('setup-key').value  = apiKey;
+  show('screen-setup');
+}
+
+async function api(path, method, body) {
+  method = method || 'GET';
+  var opts = {
+    method: method,
+    headers: { 'x-bf-userid': userId, 'x-bf-apikey': apiKey, 'Content-Type': 'application/json' }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  var r = await fetch('/api' + path, opts);
+  var txt = await r.text();
+  if (!r.ok) throw new Error('HTTP ' + r.status + ': ' + txt.slice(0,150));
+  try { return JSON.parse(txt); } catch(e) { return txt; }
+}
+
+async function doConnect() {
+  userId = document.getElementById('setup-user').value.trim();
+  apiKey  = document.getElementById('setup-key').value.trim();
+  var err = document.getElementById('setup-err');
+  err.style.display = 'none';
+  if (!userId || !apiKey) { err.textContent = 'Please fill in both fields.'; err.style.display='block'; return; }
+  try {
+    await api('/recipes?limit=1');
+    localStorage.setItem('bf_user', userId);
+    localStorage.setItem('bf_key',  apiKey);
+    show('screen-home');
+  } catch(e) {
+    err.textContent = 'Could not connect: ' + e.message;
+    err.style.display = 'block';
+  }
+}
+
+async function startFlow(f) {
+  flow = f;
+  selected = {};
+  show('screen-select');
+  document.getElementById('select-title').textContent = f === 'check' ? 'Check ingredients' : 'Deduct inventory';
+  document.getElementById('select-sub').textContent   = f === 'check'
+    ? 'Select one or more recipes to check your stock.'
+    : 'Select the recipes you just brewed.';
+  document.getElementById('recipe-list').innerHTML = '<div class="loading">Loading recipes…</div>';
+  updateBar();
+  try {
+    allRecipes = await api('/recipes?limit=50');
+    renderCards();
+  } catch(e) {
+    document.getElementById('recipe-list').innerHTML = '<div class="alert alert-err">Error: ' + e.message + '</div>';
+  }
+}
+
+function renderCards() {
+  if (!allRecipes.length) { document.getElementById('recipe-list').innerHTML = '<div class="loading">No recipes found.</div>'; return; }
+  var html = '';
+  allRecipes.forEach(function(r) {
+    var sel = !!selected[r._id];
+    html += '<div class="recipe-card' + (sel?' selected':'') + '" onclick="toggleCard(\'' + r._id + '\')">' +
+      '<div class="checkbox">' + (sel ? '✓' : '') + '</div>' +
+      '<div>' +
+        '<div class="recipe-name">' + esc(r.name||'Unnamed') + '</div>' +
+        '<div class="recipe-meta">' + (r.style&&r.style.name ? esc(r.style.name)+' · ' : '') + (r.batchSize ? r.batchSize+' L' : '') + '</div>' +
+      '</div>' +
+    '</div>';
+  });
+  document.getElementById('recipe-list').innerHTML = html;
+}
+
+function toggleCard(id) {
+  if (selected[id]) delete selected[id]; else selected[id] = true;
+  renderCards();
+  updateBar();
+}
+
+function updateBar() {
+  var n = Object.keys(selected).length;
+  document.getElementById('sel-count').textContent = n === 0 ? 'No recipes selected' : n + ' recipe' + (n>1?'s':'') + ' selected';
+  document.getElementById('sel-btn').disabled = n === 0;
+}
+
+async function loadInventory() {
+  inventory = {};
+  var cats = ['fermentables','hops','yeasts','miscs'];
+  await Promise.all(cats.map(async function(cat) {
+    try {
+      var items = await api('/inventory/' + cat + '?limit=500');
+      inventory[cat] = Array.isArray(items) ? items : [];
+    } catch(e) { inventory[cat] = []; }
+  }));
+}
+
+function norm(s) { return (s||'').toLowerCase().replace(/[^a-z0-9]/g,''); }
+
+function autoMatch(name) {
+  var saved = links[name];
+  if (saved) {
+    var cat = inventory[saved.cat] || [];
+    var item = null;
+    for (var i=0;i<cat.length;i++) { if (cat[i]._id === saved.id) { item = cat[i]; break; } }
+    if (item) return { id: item._id, cat: saved.cat, item: item };
+  }
+  var nName = norm(name);
+  var cats = Object.keys(inventory);
+  for (var c=0;c<cats.length;c++) {
+    var items = inventory[cats[c]];
+    for (var i=0;i<items.length;i++) {
+      var nItem = norm(items[i].name);
+      if (nItem === nName || nItem.includes(nName) || nName.includes(nItem)) {
+        return { id: items[i]._id, cat: cats[c], item: items[i] };
+      }
+    }
+  }
+  return null;
+}
+
+function getInvAmount(item) {
+  if (!item) return 0;
+  var v = item.inventory_amount;
+  if (v === undefined || v === null) v = item.inventoryAmount;
+  if (v === undefined || v === null) v = item.amount;
+  return parseFloat(v) || 0;
+}
+
+function buildMerged() {
+  var map = {};
+  recipeDetails.forEach(function(recipe) {
+    var sections = ['fermentables','hops','yeasts','miscs'];
+    sections.forEach(function(sec) {
+      var ings = recipe[sec] || [];
+      ings.forEach(function(ing) {
+        var amount = (sec==='fermentables'||sec==='hops') ? (ing.amount||0)*1000 : (ing.amount||0);
+        var unit   = sec==='yeasts' ? (ing.unit||'pkg') : 'g';
+        var key    = sec + '|' + ing.name;
+        if (map[key]) {
+          map[key].needed += amount;
+        } else {
+          var m = autoMatch(ing.name);
+          map[key] = {
+            name:   ing.name,
+            needed: amount,
+            unit:   unit,
+            sec:    sec,
+            match:  m,
+            stock:  m ? getInvAmount(m.item) : 0
+          };
+        }
+      });
+    });
+  });
+  merged = Object.values(map);
+}
+
+async function onSelectionDone() {
+  document.getElementById('sel-btn').disabled = true;
+  document.getElementById('sel-btn').textContent = 'Loading…';
+  try {
+    var ids = Object.keys(selected);
+    var results = await Promise.all([
+      Promise.all(ids.map(function(id) { return api('/recipes/' + id); })),
+      loadInventory()
+    ]);
+    recipeDetails = results[0];
+    buildMerged();
+    var unmatched = merged.filter(function(i) { return !i.match; });
+    if (unmatched.length > 0) {
+      renderLinkScreen(unmatched);
+      show('screen-link');
+    } else {
+      proceed();
+    }
+  } catch(e) {
+    alert('Error loading data: ' + e.message);
+  }
+  document.getElementById('sel-btn').disabled = false;
+  document.getElementById('sel-btn').textContent = 'Continue →';
+}
+
+function renderLinkScreen(unmatched) {
+  var allOptions = [];
+  var cats = Object.keys(inventory);
+  cats.forEach(function(cat) {
+    (inventory[cat]||[]).forEach(function(item) {
+      allOptions.push({ cat: cat, item: item });
+    });
+  });
+  allOptions.sort(function(a,b) { return a.item.name.localeCompare(b.item.name); });
+
+  var html = '';
+  unmatched.forEach(function(ing, i) {
+    html += '<div class="link-card">' +
+      '<h3>' + esc(ing.name) + ' <small style="color:#666;font-weight:400">(' + ing.sec + ')</small></h3>' +
+      '<select id="lnk-' + i + '" data-name="' + esc(ing.name) + '" data-sec="' + ing.sec + '">' +
+      '<option value="">— not in my inventory —</option>' +
+      allOptions.map(function(o) {
+        return '<option value="' + o.item._id + '|' + o.cat + '">' + esc(o.item.name) + ' (' + o.cat + ')</option>';
+      }).join('') +
+      '</select>' +
+    '</div>';
+  });
+  document.getElementById('link-list').innerHTML = html;
+  window._unmatched = unmatched;
+}
+
+function onLinkDone() {
+  var unmatched = window._unmatched || [];
+  unmatched.forEach(function(ing, i) {
+    var el = document.getElementById('lnk-' + i);
+    if (!el || !el.value) return;
+    var parts  = el.value.split('|');
+    var invId  = parts[0];
+    var invCat = parts[1];
+    links[ing.name] = { id: invId, cat: invCat };
+    var entry = merged.find(function(m) { return m.name === ing.name && m.sec === ing.sec; });
+    if (entry) {
+      var item = (inventory[invCat]||[]).find(function(it) { return it._id === invId; });
+      if (item) {
+        entry.match = { id: invId, cat: invCat, item: item };
+        entry.stock = getInvAmount(item);
+      }
+    }
+  });
+  localStorage.setItem('bf_links', JSON.stringify(links));
+  proceed();
+}
+
+function proceed() {
+  if (flow === 'check') renderCheck();
+  else renderDeduct();
+}
+
+var SEC_LABELS = { fermentables:'Fermentables', hops:'Hops', yeasts:'Yeasts', miscs:'Misc' };
+var SECS = ['fermentables','hops','yeasts','miscs'];
+
+function renderCheck() {
+  show('screen-check');
+  var nOk=0, nWarn=0, nBad=0, nUnk=0;
+  merged.forEach(function(ing) {
+    if (!ing.match) { nUnk++; return; }
+    var diff = ing.stock - ing.needed;
+    if (diff >= 0) nOk++;
+    else if (ing.stock > 0) nWarn++;
+    else nBad++;
+  });
+
+  var pills = '';
+  if (nOk)   pills += '<span class="pill pill-ok">✓ ' + nOk + ' ok</span>';
+  if (nWarn) pills += '<span class="pill pill-warn">⚠ ' + nWarn + ' short</span>';
+  if (nBad)  pills += '<span class="pill pill-missing">✗ ' + nBad + ' missing</span>';
+  if (nUnk)  pills += '<span class="pill" style="background:#1a1a1a;border:1px solid #333;color:#666">? ' + nUnk + ' unknown</span>';
+  document.getElementById('check-pills').innerHTML = pills;
+
+  var html = '';
+  SECS.forEach(function(sec) {
+    var ings = merged.filter(function(i) { return i.sec === sec; });
+    if (!ings.length) return;
+    html += '<div class="ing-section"><div class="ing-section-title">' + SEC_LABELS[sec] + '</div>';
+    ings.forEach(function(ing) {
+      var statusHtml;
+      if (!ing.match) {
+        statusHtml = '<span class="ing-status warn">? unknown</span>';
+      } else {
+        var diff = ing.stock - ing.needed;
+        if (diff >= 0) {
+          statusHtml = '<span class="ing-status ok">✓ ' + fmt(ing.stock) + ing.unit + ' in stock</span>';
+        } else if (ing.stock > 0) {
+          statusHtml = '<span class="ing-status warn">⚠ ' + fmt(Math.abs(diff)) + ing.unit + ' short</span>';
+        } else {
+          statusHtml = '<span class="ing-status bad">✗ not in stock</span>';
+        }
+      }
+      html += '<div class="ing-row">' +
+        '<div class="ing-name">' + esc(ing.name) + '<div class="ing-sub">need ' + fmt(ing.needed) + ing.unit + '</div></div>' +
+        statusHtml +
+      '</div>';
+    });
+    html += '</div>';
+  });
+
+  // Combined shortages if multiple recipes
+  if (recipeDetails.length > 1) {
+    var shortages = merged.filter(function(i) { return i.match && (i.stock - i.needed) < 0; });
+    if (shortages.length) {
+      html += '<div class="ing-section"><div class="ing-section-title">Combined shortages across all recipes</div>';
+      shortages.forEach(function(ing) {
+        var short = ing.needed - ing.stock;
+        html += '<div class="ing-row">' +
+          '<div class="ing-name">' + esc(ing.name) + '</div>' +
+          '<span class="ing-status bad">need ' + fmt(short) + ing.unit + ' more</span>' +
+        '</div>';
+      });
+      html += '</div>';
+    }
+  }
+
+  document.getElementById('check-body').innerHTML = html;
+}
+
+function renderDeduct() {
+  show('screen-deduct');
+  var matched   = merged.filter(function(i) { return  i.match; });
+  var unmatched = merged.filter(function(i) { return !i.match; });
+
+  document.getElementById('deduct-warn').innerHTML = unmatched.length
+    ? '<div class="alert alert-warn">⚠ ' + unmatched.length + ' ingredient(s) skipped — not linked to inventory: ' + unmatched.map(function(i){return esc(i.name);}).join(', ') + '</div>'
+    : '';
+
+  if (!matched.length) {
+    document.getElementById('deduct-body').innerHTML = '<div class="alert alert-err">No ingredients matched. Go back and link them first.</div>';
+    return;
+  }
+
+  var html = '';
+  SECS.forEach(function(sec) {
+    var ings = matched.filter(function(i) { return i.sec === sec; });
+    if (!ings.length) return;
+    html += '<div class="ing-section"><div class="ing-section-title">' + SEC_LABELS[sec] + '</div>';
+    ings.forEach(function(ing) {
+      var idx = merged.indexOf(ing);
+      html += '<div class="ing-row">' +
+        '<div class="ing-name">' + esc(ing.name) + '<div class="ing-sub">in stock: ' + fmt(ing.stock) + ing.unit + '</div></div>' +
+        '<input class="ing-input" type="number" min="0" step="0.1" id="d-' + idx + '" value="' + fmt(ing.needed) + '">' +
+        '<span class="ing-unit">' + ing.unit + '</span>' +
+      '</div>';
+    });
+    html += '</div>';
+  });
+  document.getElementById('deduct-body').innerHTML = html;
+  document.getElementById('deduct-err').style.display = 'none';
+}
+
+async function doDeduct() {
+  var errEl = document.getElementById('deduct-err');
+  errEl.style.display = 'none';
+  var deducted = 0, failed = 0, failedNames = [];
+
+  for (var i = 0; i < merged.length; i++) {
+    var ing = merged[i];
+    if (!ing.match) continue;
+    var inputEl = document.getElementById('d-' + i);
+    if (!inputEl) continue;
+    var amount = parseFloat(inputEl.value) || 0;
+    if (amount <= 0) continue;
+
+    var success = false;
+    // Try inventory_adjust first, then adjustAmount
+    var payloads = [{ inventory_adjust: -amount }, { adjustAmount: -amount }];
+    for (var p = 0; p < payloads.length; p++) {
+      try {
+        await api('/inventory/' + ing.match.cat + '/' + ing.match.id, 'PATCH', payloads[p]);
+        success = true;
+        break;
+      } catch(e) {
+        // try next payload
+      }
+    }
+    if (success) deducted++;
+    else { failed++; failedNames.push(ing.name); }
+  }
+
+  if (deducted === 0 && failed > 0) {
+    errEl.textContent = 'All deductions failed. The API rejected the update — check that your API key has inventory write permission. Failed: ' + failedNames.join(', ');
+    errEl.style.display = 'block';
+    return;
+  }
+
+  var msg = deducted + ' ingredient' + (deducted!==1?'s':'') + ' deducted from your Brewfather inventory.';
+  if (failed) msg += ' ' + failed + ' failed: ' + failedNames.join(', ');
+  document.getElementById('success-msg').textContent = msg;
+  show('screen-success');
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmt(n) {
+  n = parseFloat(n) || 0;
+  return Number.isInteger(n) ? n : parseFloat(n.toFixed(1));
+}
+
+// Boot
+if (userId && apiKey) show('screen-home');
+else showSetup();
+</script>
+</body>
+</html>
