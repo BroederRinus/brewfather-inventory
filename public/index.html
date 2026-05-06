@@ -389,6 +389,7 @@ async function startFlow(f) {
   updateBar();
   try {
     allRecipes = await api('/recipes?limit=50');
+allRecipes.sort(function(a,b) { return (a.name||'').localeCompare(b.name||''); });
     renderCards();
   } catch(e) {
     document.getElementById('recipe-list').innerHTML = '<div class="alert alert-err">Error: ' + e.message + '</div>';
@@ -460,10 +461,12 @@ function autoMatch(name) {
 
 function getInvAmount(item) {
   if (!item) return 0;
-  var v = item.inventory_amount;
-  if (v === undefined || v === null) v = item.inventoryAmount;
-  if (v === undefined || v === null) v = item.amount;
-  return parseFloat(v) || 0;
+  var fields = ['inventory_amount','inventoryAmount','amount','stock','quantity','inv_amount'];
+  for (var i = 0; i < fields.length; i++) {
+    var v = item[fields[i]];
+    if (v !== undefined && v !== null && v !== 0) return parseFloat(v) || 0;
+  }
+  return 0;
 }
 
 function buildMerged() {
@@ -473,7 +476,7 @@ function buildMerged() {
     sections.forEach(function(sec) {
       var ings = recipe[sec] || [];
       ings.forEach(function(ing) {
-        var amount = (sec==='fermentables'||sec==='hops') ? (ing.amount||0)*1000 : (ing.amount||0);
+        var amount = (sec==='fermentables') ? (ing.amount||0)*1000 : (ing.amount||0);
         var unit   = sec==='yeasts' ? (ing.unit||'pkg') : 'g';
         var key    = sec + '|' + ing.name;
         if (map[key]) {
