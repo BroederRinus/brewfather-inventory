@@ -1,1 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Debug</title></head>
+<body style="background:#111;color:#eee;font-family:monospace;padding:20px">
+<h2>Brewfather API Debug</h2>
+<input id="u" placeholder="User ID" style="background:#222;color:#eee;border:1px solid #444;padding:6px;width:200px;margin-right:8px">
+<input id="k" placeholder="API Key" type="password" style="background:#222;color:#eee;border:1px solid #444;padding:6px;width:200px;margin-right:8px">
+<button onclick="run()" style="background:#e8a13a;border:none;padding:6px 14px;cursor:pointer;font-weight:bold">Fetch inventory</button>
+<pre id="out" style="margin-top:20px;white-space:pre-wrap;font-size:12px"></pre>
+<script>
+async function run() {
+  var u = document.getElementById('u').value.trim();
+  var k = document.getElementById('k').value.trim();
+  var out = document.getElementById('out');
+  out.textContent = 'Loading...';
+  try {
+    var r = await fetch('/api/inventory/fermentables?limit=3', {
+      headers: { 'x-bf-userid': u, 'x-bf-apikey': k }
+    });
+    var data = await r.json();
+    out.textContent = JSON.stringify(data, null, 2);
+  } catch(e) {
+    out.textContent = 'Error: ' + e.message;
+  }
+}
+</script>
+</body>
+</html>
 
