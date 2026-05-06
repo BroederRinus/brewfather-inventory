@@ -461,12 +461,7 @@ function autoMatch(name) {
 
 function getInvAmount(item) {
   if (!item) return 0;
-  var fields = ['inventory_amount','inventoryAmount','amount','stock','quantity','inv_amount'];
-  for (var i = 0; i < fields.length; i++) {
-    var v = item[fields[i]];
-    if (v !== undefined && v !== null && v !== 0) return parseFloat(v) || 0;
-  }
-  return 0;
+  return parseFloat(item.inventory) || 0;
 }
 
 function buildMerged() {
