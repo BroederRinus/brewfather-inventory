@@ -8,253 +8,77 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   :root {
-    --bg: #0f1117;
-    --surface: #1a1d27;
-    --surface2: #22263a;
-    --border: rgba(255,255,255,0.08);
-    --border2: rgba(255,255,255,0.15);
-    --text: #f0f0f5;
-    --muted: #7a7d99;
-    --accent: #e8a13a;
-    --accent2: #2a4fff;
-    --hop: #3a7d44;
-    --hop-bg: #1a2e1d;
-    --malt: #8a5a2a;
-    --malt-bg: #2e2010;
-    --yeast: #4a3a8a;
-    --yeast-bg: #1a1530;
-    --misc: #3a6a7a;
-    --misc-bg: #102030;
-    --danger: #e05050;
-    --success: #4aaa70;
-    --font: 'DM Sans', sans-serif;
-    --mono: 'DM Mono', monospace;
-    --radius: 12px;
-    --radius-sm: 8px;
+    --bg: #0f1117; --surface: #1a1d27; --surface2: #22263a;
+    --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.15);
+    --text: #f0f0f5; --muted: #7a7d99; --accent: #e8a13a;
+    --hop-bg: #1a2e1d; --hop: #3a7d44;
+    --malt-bg: #2e2010; --malt: #8a5a2a;
+    --yeast-bg: #1a1530; --yeast: #4a3a8a;
+    --misc-bg: #102030; --misc: #3a6a7a;
+    --danger: #e05050; --success: #4aaa70; --warn: #e0a030;
+    --font: 'DM Sans', sans-serif; --mono: 'DM Mono', monospace;
+    --radius: 12px; --radius-sm: 8px;
   }
-
-  body {
-    font-family: var(--font);
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 0;
-  }
-
-  .app {
-    width: 100%;
-    max-width: 480px;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .topbar {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 1.25rem 1.25rem 0;
-    margin-bottom: 1.5rem;
-  }
-
-  .topbar-icon {
-    width: 32px;
-    height: 32px;
-    background: var(--accent);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-  }
-
-  .topbar h1 {
-    font-family: var(--mono);
-    font-size: 15px;
-    font-weight: 500;
-    color: var(--text);
-    letter-spacing: -0.01em;
-  }
-
-  .back-btn {
-    background: none;
-    border: none;
-    color: var(--muted);
-    cursor: pointer;
-    font-size: 20px;
-    padding: 0;
-    margin-right: 4px;
-    line-height: 1;
-    transition: color 0.15s;
-  }
-  .back-btn:hover { color: var(--text); }
-
+  body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
+  .app { width: 100%; max-width: 480px; min-height: 100vh; display: flex; flex-direction: column; }
+  .topbar { display: flex; align-items: center; gap: 10px; padding: 1.25rem 1.25rem 0; margin-bottom: 1.5rem; }
+  .topbar-icon { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .topbar h1 { font-family: var(--mono); font-size: 15px; font-weight: 500; color: var(--text); }
   .screen { display: none; padding: 0 1.25rem 2rem; flex: 1; flex-direction: column; }
   .screen.active { display: flex; }
-
-  .section-label {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin-bottom: 0.75rem;
-  }
-
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1rem 1.25rem;
-    margin-bottom: 10px;
-    cursor: pointer;
-    transition: border-color 0.15s, background 0.15s;
-  }
+  .section-label { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.75rem; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; margin-bottom: 10px; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
   .card:hover { border-color: var(--border2); background: var(--surface2); }
   .card h2 { font-size: 15px; font-weight: 500; margin-bottom: 3px; }
   .card p { font-size: 13px; color: var(--muted); }
-
   .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1rem; }
   .field label { font-size: 13px; color: var(--muted); font-family: var(--mono); }
-  .field input {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    color: var(--text);
-    font-family: var(--mono);
-    font-size: 14px;
-    padding: 10px 12px;
-    outline: none;
-    transition: border-color 0.15s;
-  }
+  .field input { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: var(--mono); font-size: 14px; padding: 10px 12px; outline: none; transition: border-color 0.15s; }
   .field input:focus { border-color: var(--accent); }
   .field .hint { font-size: 12px; color: var(--muted); line-height: 1.5; }
-
-  .btn {
-    width: 100%;
-    padding: 13px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border2);
-    background: var(--surface);
-    color: var(--text);
-    font-family: var(--font);
-    font-size: 15px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
-    margin-top: 0.5rem;
-  }
-  .btn:hover { background: var(--surface2); border-color: rgba(255,255,255,0.25); }
+  .btn { width: 100%; padding: 13px; border-radius: var(--radius-sm); border: 1px solid var(--border2); background: var(--surface); color: var(--text); font-family: var(--font); font-size: 15px; font-weight: 500; cursor: pointer; transition: background 0.15s; margin-top: 0.5rem; }
+  .btn:hover { background: var(--surface2); }
   .btn-accent { background: var(--accent); border-color: var(--accent); color: #0f1117; }
   .btn-accent:hover { background: #f0b050; border-color: #f0b050; }
   .btn-danger { border-color: rgba(224,80,80,0.4); color: var(--danger); }
   .btn-danger:hover { background: rgba(224,80,80,0.1); }
   .btn-small { font-size: 13px; padding: 9px; margin-top: 1rem; color: var(--muted); border-color: var(--border); }
-
   .ing-list { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 1rem; }
-  .ing-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 1.25rem;
-    border-bottom: 1px solid var(--border);
-  }
+  .ing-row { display: flex; align-items: center; gap: 8px; padding: 11px 1.25rem; border-bottom: 1px solid var(--border); }
   .ing-row:last-child { border-bottom: none; }
-  .ing-name { flex: 1; font-size: 14px; }
-  .ing-badge {
-    font-size: 10px;
-    font-family: var(--mono);
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-weight: 500;
-    letter-spacing: 0.03em;
-  }
+  .ing-row.no-match { opacity: 0.45; }
+  .ing-name { flex: 1; font-size: 14px; min-width: 0; }
+  .ing-name span { display: block; font-size: 11px; color: var(--warn); margin-top: 2px; font-family: var(--mono); }
+  .ing-badge { font-size: 10px; font-family: var(--mono); padding: 2px 6px; border-radius: 4px; font-weight: 500; white-space: nowrap; }
   .badge-hop { background: var(--hop-bg); color: #6dcc80; border: 1px solid var(--hop); }
   .badge-malt { background: var(--malt-bg); color: #e0a060; border: 1px solid var(--malt); }
   .badge-yeast { background: var(--yeast-bg); color: #a080e0; border: 1px solid var(--yeast); }
   .badge-misc { background: var(--misc-bg); color: #60b0cc; border: 1px solid var(--misc); }
-
-  .ing-input {
-    width: 68px;
-    padding: 5px 8px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--text);
-    font-family: var(--mono);
-    font-size: 13px;
-    text-align: right;
-    outline: none;
-    transition: border-color 0.15s;
-  }
+  .ing-input { width: 64px; padding: 5px 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: var(--mono); font-size: 13px; text-align: right; outline: none; transition: border-color 0.15s; }
   .ing-input:focus { border-color: var(--accent); }
+  .ing-input:disabled { opacity: 0.3; }
   .ing-unit { font-size: 12px; color: var(--muted); font-family: var(--mono); min-width: 22px; }
-
-  .error {
-    background: rgba(224,80,80,0.1);
-    border: 1px solid rgba(224,80,80,0.3);
-    border-radius: var(--radius-sm);
-    color: var(--danger);
-    font-size: 13px;
-    padding: 10px 14px;
-    margin-bottom: 1rem;
-    line-height: 1.5;
-  }
-
-  .loading {
-    text-align: center;
-    padding: 2.5rem;
-    color: var(--muted);
-    font-size: 14px;
-  }
-  .spinner {
-    display: inline-block;
-    width: 18px;
-    height: 18px;
-    border: 2px solid var(--border2);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    vertical-align: middle;
-    margin-right: 8px;
-  }
+  .error { background: rgba(224,80,80,0.1); border: 1px solid rgba(224,80,80,0.3); border-radius: var(--radius-sm); color: var(--danger); font-size: 13px; padding: 10px 14px; margin-bottom: 1rem; line-height: 1.5; }
+  .info-box { background: rgba(232,161,58,0.08); border: 1px solid rgba(232,161,58,0.25); border-radius: var(--radius-sm); color: var(--warn); font-size: 13px; padding: 10px 14px; margin-bottom: 1rem; line-height: 1.6; }
+  .loading { text-align: center; padding: 2.5rem; color: var(--muted); font-size: 14px; }
+  .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 8px; }
   @keyframes spin { to { transform: rotate(360deg); } }
-
-  .success-wrap {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    gap: 12px;
-    padding: 2rem;
-  }
-  .success-icon {
-    font-size: 52px;
-    line-height: 1;
-    margin-bottom: 8px;
-  }
+  .success-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 12px; padding: 2rem; }
+  .success-icon { font-size: 52px; line-height: 1; margin-bottom: 8px; }
   .success-title { font-size: 20px; font-weight: 600; }
   .success-sub { font-size: 14px; color: var(--muted); }
-
   .sub-text { font-size: 14px; color: var(--muted); margin-bottom: 1.25rem; line-height: 1.6; }
 </style>
 </head>
 <body>
 <div class="app">
-
   <div class="topbar">
     <div class="topbar-icon">🍺</div>
     <h1 id="topbar-title">brewfather / inventory</h1>
   </div>
 
-  <!-- Setup screen -->
+  <!-- Setup -->
   <div id="screen-setup" class="screen active">
     <div class="section-label">API credentials</div>
     <p class="sub-text">Enter your Brewfather credentials. Find them in Brewfather → Settings → Security.</p>
@@ -265,23 +89,24 @@
     <div class="field">
       <label>API Key</label>
       <input type="password" id="input-apikey" placeholder="Your generated API key" autocomplete="off" />
-      <span class="hint">Make sure your API key has <strong>recipes.read</strong> and <strong>inventory.write</strong> permissions enabled.</span>
+      <span class="hint">Make sure your API key has <strong>recipes.read</strong>, <strong>inventory.read</strong> and <strong>inventory.write</strong> permissions.</span>
     </div>
     <div id="setup-error" class="error" style="display:none"></div>
     <button class="btn btn-accent" onclick="doConnect()">Connect →</button>
   </div>
 
-  <!-- Recipes screen -->
+  <!-- Recipes -->
   <div id="screen-recipes" class="screen">
     <div class="section-label">your recipes</div>
     <p class="sub-text">Tap the recipe you're brewing today.</p>
-    <div id="recipe-list"><div class="loading"><span class="spinner"></span>Loading recipes…</div></div>
+    <div id="recipe-list"><div class="loading"><span class="spinner"></span>Loading…</div></div>
     <button class="btn btn-small" onclick="showSetup()">⚙ Change credentials</button>
   </div>
 
-  <!-- Confirm screen -->
+  <!-- Confirm -->
   <div id="screen-confirm" class="screen">
-    <p class="sub-text" id="confirm-sub">Check and adjust the amounts below if you used more or less than the recipe says.</p>
+    <p class="sub-text" id="confirm-sub"></p>
+    <div id="no-match-warning" class="info-box" style="display:none"></div>
     <div class="section-label">ingredients</div>
     <div id="ingredient-list" class="ing-list"></div>
     <div id="confirm-error" class="error" style="display:none"></div>
@@ -289,35 +114,33 @@
     <button class="btn btn-small" onclick="showRecipes()">← Back to recipes</button>
   </div>
 
-  <!-- Success screen -->
+  <!-- Success -->
   <div id="screen-success" class="screen">
     <div class="success-wrap">
       <div class="success-icon">✅</div>
       <div class="success-title">Inventory updated!</div>
-      <div class="success-sub" id="success-sub">All ingredients have been deducted.</div>
+      <div class="success-sub" id="success-sub"></div>
       <button class="btn" style="margin-top:1.5rem; max-width:220px;" onclick="showRecipes()">← Back to recipes</button>
     </div>
   </div>
-
 </div>
 
 <script>
 let userId = localStorage.getItem('bf_userid') || '';
 let apiKey = localStorage.getItem('bf_apikey') || '';
 let currentIngredients = [];
+let inventoryCache = {};
 
 function show(id, title) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   if (title) document.getElementById('topbar-title').textContent = title;
 }
-
 function showSetup() {
   document.getElementById('input-userid').value = userId;
   document.getElementById('input-apikey').value = apiKey;
   show('screen-setup', 'brewfather / credentials');
 }
-
 function showRecipes() {
   show('screen-recipes', 'brewfather / recipes');
   loadRecipes();
@@ -329,7 +152,6 @@ async function apiFetch(path, method = 'GET', body = null) {
     headers: { 'x-bf-userid': userId, 'x-bf-apikey': apiKey, 'Content-Type': 'application/json' }
   };
   if (body) opts.body = JSON.stringify(body);
-  // Use relative URL — works both on Glitch and locally
   const resp = await fetch('/api' + path, opts);
   if (!resp.ok) {
     const txt = await resp.text();
@@ -338,24 +160,48 @@ async function apiFetch(path, method = 'GET', body = null) {
   return resp.json();
 }
 
+async function loadInventory() {
+  inventoryCache = {};
+  const categories = ['fermentables', 'hops', 'yeasts', 'miscs'];
+  await Promise.all(categories.map(async cat => {
+    try {
+      const items = await apiFetch(`/inventory/${cat}?limit=500`);
+      items.forEach(item => {
+        const key = item.name.toLowerCase().trim();
+        if (!inventoryCache[key]) inventoryCache[key] = [];
+        inventoryCache[key].push({ ...item, _category: cat });
+      });
+    } catch(e) {
+      console.warn('Could not load inventory for', cat, e.message);
+    }
+  }));
+}
+
+function findInInventory(name) {
+  if (!name) return null;
+  const key = name.toLowerCase().trim();
+  const exact = inventoryCache[key];
+  if (exact && exact.length) return exact[0];
+  for (const [ikey, items] of Object.entries(inventoryCache)) {
+    if (ikey.includes(key) || key.includes(ikey)) return items[0];
+  }
+  return null;
+}
+
 async function doConnect() {
   userId = document.getElementById('input-userid').value.trim();
   apiKey = document.getElementById('input-apikey').value.trim();
   const err = document.getElementById('setup-error');
   err.style.display = 'none';
-  if (!userId || !apiKey) {
-    err.textContent = 'Please fill in both fields.';
-    err.style.display = 'block';
-    return;
-  }
+  if (!userId || !apiKey) { err.textContent = 'Please fill in both fields.'; err.style.display='block'; return; }
   try {
     await apiFetch('/recipes?limit=1');
     localStorage.setItem('bf_userid', userId);
     localStorage.setItem('bf_apikey', apiKey);
     showRecipes();
   } catch(e) {
-    err.textContent = 'Could not connect. Double-check your User ID and API key. ' + e.message;
-    err.style.display = 'block';
+    err.textContent = 'Could not connect. Double-check your credentials. ' + e.message;
+    err.style.display='block';
   }
 }
 
@@ -396,29 +242,35 @@ function badgeLabel(type) {
 async function selectRecipe(id, name) {
   show('screen-confirm', 'brewfather / ' + name.toLowerCase());
   document.getElementById('confirm-sub').textContent = `Brewing: ${name}. Adjust amounts if needed.`;
+  document.getElementById('no-match-warning').style.display = 'none';
   const list = document.getElementById('ingredient-list');
-  list.innerHTML = '<div class="loading"><span class="spinner"></span>Loading ingredients…</div>';
+  list.innerHTML = '<div class="loading"><span class="spinner"></span>Loading ingredients & inventory…</div>';
   document.getElementById('confirm-error').style.display = 'none';
   currentIngredients = [];
 
   try {
-    const recipe = await apiFetch(`/recipes/${id}`);
+    const [recipe] = await Promise.all([
+      apiFetch(`/recipes/${id}`),
+      loadInventory()
+    ]);
+
     const sections = [
       { key: 'fermentables', label: 'fermentable', unitFn: () => 'g', amountFn: i => Math.round((i.amount || 0) * 1000) },
-      { key: 'hops', label: 'hop', unitFn: () => 'g', amountFn: i => Math.round((i.amount || 0) * 1000) },
-      { key: 'yeasts', label: 'yeast', unitFn: i => i.unit || 'pkg', amountFn: i => i.amount || 1 },
-      { key: 'miscs', label: 'misc', unitFn: i => i.unit || 'g', amountFn: i => i.amount || 0 },
+      { key: 'hops',         label: 'hop',          unitFn: () => 'g', amountFn: i => Math.round((i.amount || 0) * 1000) },
+      { key: 'yeasts',       label: 'yeast',        unitFn: i => i.unit || 'pkg', amountFn: i => i.amount || 1 },
+      { key: 'miscs',        label: 'misc',         unitFn: i => i.unit || 'g', amountFn: i => i.amount || 0 },
     ];
 
     sections.forEach(s => {
       (recipe[s.key] || []).forEach(ing => {
+        const invItem = findInInventory(ing.name);
         currentIngredients.push({
           name: ing.name,
           amount: s.amountFn(ing),
           unit: s.unitFn(ing),
           type: s.label,
-          inventoryId: ing.inventory?._id || null,
-          section: s.key
+          section: s.key,
+          invItem: invItem,
         });
       });
     });
@@ -428,47 +280,55 @@ async function selectRecipe(id, name) {
       return;
     }
 
+    const unmatched = currentIngredients.filter(i => !i.invItem);
+    if (unmatched.length) {
+      const warn = document.getElementById('no-match-warning');
+      warn.innerHTML = `⚠️ ${unmatched.length} ingredient${unmatched.length>1?'s':''} not found in your inventory and will be skipped: <strong>${unmatched.map(i=>i.name).join(', ')}</strong>. Add them to your Brewfather inventory first.`;
+      warn.style.display = 'block';
+    }
+
     list.innerHTML = currentIngredients.map((ing, i) => `
-      <div class="ing-row">
-        <span class="ing-name">${ing.name}</span>
+      <div class="ing-row${!ing.invItem ? ' no-match' : ''}">
+        <span class="ing-name">
+          ${ing.name}
+          ${!ing.invItem ? '<span>not in inventory</span>' : ''}
+        </span>
         <span class="ing-badge ${badgeClass(ing.type)}">${badgeLabel(ing.type)}</span>
-        <input class="ing-input" type="number" min="0" step="1" id="ing-${i}" value="${ing.amount}" />
+        <input class="ing-input" type="number" min="0" step="1" id="ing-${i}" value="${ing.amount}" ${!ing.invItem ? 'disabled' : ''} />
         <span class="ing-unit">${ing.unit}</span>
       </div>
     `).join('');
   } catch(e) {
-    list.innerHTML = `<div class="error">Could not load recipe.<br>${e.message}</div>`;
+    list.innerHTML = `<div class="error">Could not load data.<br>${e.message}</div>`;
   }
 }
 
 async function doDeduct() {
   const err = document.getElementById('confirm-error');
   err.style.display = 'none';
-
-  const typeMap = { fermentables: 'fermentables', hops: 'hops', yeasts: 'yeasts', miscs: 'miscs' };
   let deducted = 0, skipped = 0;
 
   for (let i = 0; i < currentIngredients.length; i++) {
     const ing = currentIngredients[i];
+    if (!ing.invItem) { skipped++; continue; }
     const used = parseFloat(document.getElementById('ing-' + i).value) || 0;
-    if (!ing.inventoryId || used <= 0) { skipped++; continue; }
+    if (used <= 0) { skipped++; continue; }
     try {
-      await apiFetch(`/inventory/${typeMap[ing.section]}/${ing.inventoryId}`, 'PATCH', { adjustAmount: -used });
+      await apiFetch(`/inventory/${ing.invItem._category}/${ing.invItem._id}`, 'PATCH', { inventory_adjust: -used });
       deducted++;
     } catch(e) {
-      console.warn('Could not deduct', ing.name, e.message);
+      console.warn('Failed to deduct', ing.name, e.message);
       skipped++;
     }
   }
 
   const msg = skipped > 0
-    ? `${deducted} deducted. ${skipped} skipped (not found in inventory).`
+    ? `${deducted} deducted. ${skipped} skipped (not in inventory).`
     : `${deducted} ingredient${deducted !== 1 ? 's' : ''} successfully deducted.`;
   document.getElementById('success-sub').textContent = msg;
   show('screen-success', 'brewfather / done');
 }
 
-// Auto-load if credentials are saved
 if (userId && apiKey) showRecipes();
 else showSetup();
 </script>
