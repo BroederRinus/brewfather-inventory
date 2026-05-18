@@ -5,92 +5,50 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Brewfather</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background: #111;
   color: #eee;
   min-height: 100vh;
 }
-.app {
-  max-width: 500px;
-  margin: 0 auto;
-  padding: 0 16px 80px 16px;
-}
-h1 {
-  font-size: 18px;
-  font-weight: 600;
-  padding: 20px 0 4px 0;
-}
-.subtitle {
-  font-size: 13px;
-  color: #888;
-  margin-bottom: 20px;
-}
+.app { max-width: 500px; margin: 0 auto; padding: 0 16px 100px 16px; }
+
+h1 { font-size: 20px; font-weight: 600; padding: 20px 0 4px 0; }
+.subtitle { font-size: 13px; color: #888; margin-bottom: 20px; line-height: 1.5; }
+
 .screen { display: none; }
 .screen.active { display: block; }
 
-/* Back button */
-.back {
-  background: none;
-  border: none;
-  color: #e8a13a;
-  font-size: 14px;
-  cursor: pointer;
-  padding: 16px 0 8px 0;
-  display: block;
-}
+.back { background: none; border: none; color: #e8a13a; font-size: 14px; cursor: pointer; padding: 16px 0 8px 0; display: block; }
 
-/* Big menu buttons on home screen */
+/* Home menu */
 .menu-btn {
-  width: 100%;
-  background: #1e1e1e;
-  border: 1px solid #333;
-  border-radius: 12px;
-  padding: 18px 16px;
-  margin-bottom: 12px;
-  cursor: pointer;
-  text-align: left;
-  color: #eee;
-  display: flex;
-  align-items: center;
-  gap: 14px;
+  width: 100%; background: #1e1e1e; border: 1px solid #333;
+  border-radius: 12px; padding: 18px 16px; margin-bottom: 12px;
+  cursor: pointer; text-align: left; color: #eee;
+  display: flex; align-items: center; gap: 14px;
 }
 .menu-btn:hover { background: #252525; border-color: #444; }
-.menu-btn .icon { font-size: 26px; }
-.menu-btn .label { font-size: 15px; font-weight: 600; }
-.menu-btn .desc { font-size: 12px; color: #888; margin-top: 3px; }
+.menu-icon { font-size: 26px; }
+.menu-label { font-size: 15px; font-weight: 600; }
+.menu-desc { font-size: 12px; color: #888; margin-top: 3px; }
 
-/* Form fields */
+/* Fields */
 .field { margin-bottom: 14px; }
 .field label { display: block; font-size: 12px; color: #888; margin-bottom: 5px; }
 .field input {
-  width: 100%;
-  background: #1e1e1e;
-  border: 1px solid #333;
-  border-radius: 8px;
-  color: #eee;
-  font-size: 14px;
-  padding: 10px 12px;
-  outline: none;
+  width: 100%; background: #1e1e1e; border: 1px solid #333;
+  border-radius: 8px; color: #eee; font-size: 14px; padding: 10px 12px; outline: none;
 }
 .field input:focus { border-color: #e8a13a; }
 .hint { font-size: 12px; color: #666; margin-top: 4px; line-height: 1.5; }
 
 /* Buttons */
 .btn {
-  display: block;
-  width: 100%;
-  padding: 13px;
-  border-radius: 8px;
-  border: 1px solid #444;
-  background: #1e1e1e;
-  color: #eee;
-  font-size: 15px;
-  font-weight: 500;
-  cursor: pointer;
-  margin-top: 10px;
-  text-align: center;
+  display: block; width: 100%; padding: 13px; border-radius: 8px;
+  border: 1px solid #444; background: #1e1e1e; color: #eee;
+  font-size: 15px; font-weight: 500; cursor: pointer; margin-top: 10px; text-align: center;
 }
 .btn:hover:not(:disabled) { background: #252525; }
 .btn:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -102,25 +60,15 @@ h1 {
 
 /* Recipe cards */
 .recipe-card {
-  background: #1e1e1e;
-  border: 1px solid #333;
-  border-radius: 10px;
-  padding: 14px;
-  margin-bottom: 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  background: #1e1e1e; border: 1px solid #333; border-radius: 10px;
+  padding: 14px; margin-bottom: 8px; cursor: pointer;
+  display: flex; align-items: center; gap: 12px;
 }
 .recipe-card:hover { background: #222; border-color: #444; }
 .recipe-card.selected { border-color: #e8a13a; background: #201a10; }
 .checkbox {
-  width: 22px; height: 22px;
-  border-radius: 6px;
-  border: 1.5px solid #444;
-  flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 13px;
+  width: 22px; height: 22px; border-radius: 6px; border: 1.5px solid #444;
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 13px;
 }
 .recipe-card.selected .checkbox { background: #e8a13a; border-color: #e8a13a; color: #111; }
 .recipe-name { font-size: 14px; font-weight: 500; }
@@ -128,85 +76,42 @@ h1 {
 
 /* Sticky bottom */
 .sticky {
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  background: #111;
-  border-top: 1px solid #222;
-  padding: 10px 16px 16px;
-  max-width: 500px;
-  margin: 0 auto;
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: #111; border-top: 1px solid #222; padding: 10px 16px 16px;
 }
 .sticky-inner { max-width: 500px; margin: 0 auto; }
 .sel-count { font-size: 12px; color: #666; margin-bottom: 6px; }
 
 /* Ingredient rows */
 .ing-section { margin-bottom: 16px; }
-.ing-section-title {
-  font-size: 11px;
-  color: #666;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 6px;
-}
+.ing-section-title { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
 .ing-row {
-  background: #1e1e1e;
-  border: 1px solid #2a2a2a;
-  border-radius: 8px;
-  padding: 10px 12px;
-  margin-bottom: 6px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  background: #1e1e1e; border: 1px solid #2a2a2a; border-radius: 8px;
+  padding: 10px 12px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;
 }
 .ing-name { flex: 1; font-size: 14px; min-width: 0; }
 .ing-sub { font-size: 11px; color: #666; margin-top: 2px; }
 .ing-status { font-size: 12px; font-weight: 500; white-space: nowrap; flex-shrink: 0; }
-.ok { color: #4aaa70; }
+.ok  { color: #4aaa70; }
 .warn { color: #e0a030; }
-.bad { color: #e05050; }
+.bad  { color: #e05050; }
 .ing-input {
-  width: 65px;
-  background: #111;
-  border: 1px solid #333;
-  border-radius: 6px;
-  color: #eee;
-  font-size: 13px;
-  padding: 5px 8px;
-  text-align: right;
-  outline: none;
-  flex-shrink: 0;
+  width: 65px; background: #111; border: 1px solid #333; border-radius: 6px;
+  color: #eee; font-size: 13px; padding: 5px 8px; text-align: right; outline: none; flex-shrink: 0;
 }
 .ing-input:focus { border-color: #e8a13a; }
 .ing-unit { font-size: 12px; color: #666; flex-shrink: 0; min-width: 20px; }
 
 /* Link cards */
-.link-card {
-  background: #1e1e1e;
-  border: 1px solid #333;
-  border-radius: 10px;
-  padding: 14px;
-  margin-bottom: 10px;
-}
+.link-card { background: #1e1e1e; border: 1px solid #333; border-radius: 10px; padding: 14px; margin-bottom: 10px; }
 .link-card h3 { font-size: 14px; font-weight: 500; margin-bottom: 8px; }
 .link-card select {
-  width: 100%;
-  background: #111;
-  border: 1px solid #444;
-  border-radius: 6px;
-  color: #eee;
-  font-size: 13px;
-  padding: 8px 10px;
-  outline: none;
+  width: 100%; background: #111; border: 1px solid #444; border-radius: 6px;
+  color: #eee; font-size: 13px; padding: 8px 10px; outline: none;
 }
 
 /* Alerts */
-.alert {
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 13px;
-  margin-bottom: 12px;
-  line-height: 1.5;
-}
+.alert { border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 12px; line-height: 1.5; }
 .alert-warn { background: #2a2000; border: 1px solid #604010; color: #e0a030; }
 .alert-err  { background: #2a1010; border: 1px solid #602020; color: #e05050; }
 .alert-ok   { background: #102010; border: 1px solid #205030; color: #4aaa70; }
@@ -225,7 +130,36 @@ h1 {
 .success { text-align: center; padding: 60px 20px; }
 .success .icon { font-size: 56px; margin-bottom: 16px; }
 .success h2 { font-size: 20px; margin-bottom: 8px; }
-.success p { font-size: 14px; color: #888; margin-bottom: 24px; }
+.success p { font-size: 14px; color: #888; margin-bottom: 24px; line-height: 1.6; }
+
+/* Upload area */
+.upload-area {
+  border: 2px dashed #444; border-radius: 12px; padding: 32px 20px;
+  text-align: center; cursor: pointer; margin-bottom: 16px; transition: border-color 0.2s;
+}
+.upload-area:hover { border-color: #e8a13a; }
+.upload-area.dragover { border-color: #e8a13a; background: #201a10; }
+.upload-icon { font-size: 36px; margin-bottom: 10px; }
+.upload-text { font-size: 14px; color: #888; }
+.upload-sub { font-size: 12px; color: #555; margin-top: 4px; }
+#file-input { display: none; }
+#preview-img { max-width: 100%; border-radius: 8px; margin-bottom: 16px; display: none; }
+
+/* Scanned ingredient rows (editable) */
+.scan-row {
+  background: #1e1e1e; border: 1px solid #2a2a2a; border-radius: 8px;
+  padding: 10px 12px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;
+}
+.scan-name { flex: 1; font-size: 14px; }
+.scan-input {
+  width: 65px; background: #111; border: 1px solid #333; border-radius: 6px;
+  color: #eee; font-size: 13px; padding: 5px 8px; text-align: right; outline: none;
+}
+.scan-input:focus { border-color: #e8a13a; }
+.scan-unit { font-size: 12px; color: #666; min-width: 28px; }
+.scan-type { font-size: 11px; color: #666; min-width: 80px; }
+.scan-remove { background: none; border: none; color: #666; cursor: pointer; font-size: 16px; padding: 0 4px; }
+.scan-remove:hover { color: #e05050; }
 </style>
 </head>
 <body>
@@ -242,7 +176,7 @@ h1 {
   <div class="field">
     <label>API Key</label>
     <input type="password" id="setup-key" placeholder="Your API key" autocomplete="off">
-    <div class="hint">Find in Brewfather → Settings → Security. Enable API and create a key with recipes.read and inventory read + write.</div>
+    <div class="hint">Brewfather → Settings → Security. Enable API and create a key with recipes.read and inventory read + write.</div>
   </div>
   <div id="setup-err" class="alert alert-err" style="display:none"></div>
   <button class="btn btn-orange" onclick="doConnect()">Connect</button>
@@ -253,17 +187,24 @@ h1 {
   <h1>🍺 Brewfather</h1>
   <p class="subtitle">What do you want to do?</p>
   <button class="menu-btn" onclick="startFlow('check')">
-    <span class="icon">🔍</span>
+    <span class="menu-icon">🔍</span>
     <div>
-      <div class="label">Check recipe ingredients</div>
-      <div class="desc">See if you have enough stock for one or more recipes</div>
+      <div class="menu-label">Check recipe ingredients</div>
+      <div class="menu-desc">See if you have enough stock for one or more recipes</div>
     </div>
   </button>
   <button class="menu-btn" onclick="startFlow('deduct')">
-    <span class="icon">➖</span>
+    <span class="menu-icon">➖</span>
     <div>
-      <div class="label">Deduct from inventory</div>
-      <div class="desc">Subtract used ingredients after brewing</div>
+      <div class="menu-label">Deduct from inventory</div>
+      <div class="menu-desc">Subtract ingredients after brewing — hops, fermentables and yeast only</div>
+    </div>
+  </button>
+  <button class="menu-btn" onclick="showScreen('screen-scan')">
+    <span class="menu-icon">📷</span>
+    <div>
+      <div class="menu-label">Add order to inventory</div>
+      <div class="menu-desc">Upload a screenshot of an order to add ingredients automatically</div>
     </div>
   </button>
   <button class="btn btn-small" onclick="showSetup()">⚙ Change credentials</button>
@@ -271,7 +212,7 @@ h1 {
 
 <!-- SELECT RECIPES -->
 <div id="screen-select" class="screen">
-  <button class="back" onclick="show('screen-home')">← Back</button>
+  <button class="back" onclick="showScreen('screen-home')">← Back</button>
   <h1 id="select-title">Select recipes</h1>
   <p class="subtitle" id="select-sub"></p>
   <div id="recipe-list"><div class="loading">Loading recipes…</div></div>
@@ -286,9 +227,9 @@ h1 {
 
 <!-- LINK INGREDIENTS -->
 <div id="screen-link" class="screen">
-  <button class="back" onclick="show('screen-select')">← Back</button>
+  <button class="back" onclick="showScreen('screen-select')">← Back</button>
   <h1>Link ingredients</h1>
-  <p class="subtitle">These ingredients couldn't be matched automatically. Link them to your inventory once — it's saved for next time.</p>
+  <p class="subtitle">These couldn't be matched automatically. Link them to your inventory — saved for next time.</p>
   <div id="link-list"></div>
   <button class="btn btn-orange" onclick="onLinkDone()">Save & Continue →</button>
   <button class="btn btn-small" onclick="onLinkDone()">Skip unmatched</button>
@@ -296,7 +237,7 @@ h1 {
 
 <!-- CHECK RESULTS -->
 <div id="screen-check" class="screen">
-  <button class="back" onclick="show('screen-home')">← Back to menu</button>
+  <button class="back" onclick="showScreen('screen-home')">← Back to menu</button>
   <h1>Ingredient check</h1>
   <div id="check-pills" class="pills"></div>
   <div id="check-body"></div>
@@ -304,13 +245,41 @@ h1 {
 
 <!-- DEDUCT CONFIRM -->
 <div id="screen-deduct" class="screen">
-  <button class="back" onclick="show('screen-home')">← Back to menu</button>
+  <button class="back" onclick="showScreen('screen-home')">← Back to menu</button>
   <h1>Deduct from inventory</h1>
-  <p class="subtitle">Adjust any amounts if needed, then hit deduct.</p>
+  <p class="subtitle">Adjust amounts if needed, then deduct. Only hops, fermentables and yeast are included.</p>
   <div id="deduct-warn"></div>
   <div id="deduct-body"></div>
   <div id="deduct-err" class="alert alert-err" style="display:none"></div>
   <button class="btn btn-red" onclick="doDeduct()">Deduct from inventory →</button>
+</div>
+
+<!-- SCAN / UPLOAD -->
+<div id="screen-scan" class="screen">
+  <button class="back" onclick="showScreen('screen-home')">← Back</button>
+  <h1>Add order to inventory</h1>
+  <p class="subtitle">Upload a screenshot of your order confirmation. The app will read the ingredients and amounts automatically.</p>
+
+  <div class="upload-area" id="upload-area" onclick="document.getElementById('file-input').click()">
+    <div class="upload-icon">📷</div>
+    <div class="upload-text">Tap to choose a screenshot</div>
+    <div class="upload-sub">JPG, PNG or screenshot from any shop</div>
+  </div>
+  <input type="file" id="file-input" accept="image/*" onchange="onFileSelected(event)">
+  <img id="preview-img" alt="Order preview">
+
+  <div id="scan-err" class="alert alert-err" style="display:none"></div>
+  <button class="btn btn-orange" id="scan-btn" style="display:none" onclick="doScan()">Read ingredients from image →</button>
+</div>
+
+<!-- SCAN RESULTS / CONFIRM -->
+<div id="screen-scan-confirm" class="screen">
+  <button class="back" onclick="showScreen('screen-scan')">← Back</button>
+  <h1>Confirm ingredients</h1>
+  <p class="subtitle">Check what was found. Edit amounts, remove anything wrong, then add to inventory.</p>
+  <div id="scan-results"></div>
+  <div id="scan-confirm-err" class="alert alert-err" style="display:none"></div>
+  <button class="btn btn-orange" onclick="doAddToInventory()">Add to inventory →</button>
 </div>
 
 <!-- SUCCESS -->
@@ -319,34 +288,44 @@ h1 {
     <div class="icon">✅</div>
     <h2>Done!</h2>
     <p id="success-msg"></p>
-    <button class="btn" onclick="show('screen-home')" style="max-width:200px;margin:0 auto;">Back to menu</button>
+    <button class="btn" onclick="showScreen('screen-home')" style="max-width:200px;margin:0 auto;">Back to menu</button>
   </div>
 </div>
 
-</div><!-- .app -->
+</div>
 <script>
-var userId = localStorage.getItem('bf_user') || '';
-var apiKey  = localStorage.getItem('bf_key')  || '';
-var flow = '';
+// ── State ──────────────────────────────────────────────────────────
+var userId    = localStorage.getItem('bf_user') || '';
+var apiKey    = localStorage.getItem('bf_key')  || '';
+var flow      = '';
 var allRecipes = [];
-var selected = {};
+var selected  = {};
 var inventory = {};
-var links = JSON.parse(localStorage.getItem('bf_links') || '{}');
-var merged = [];
+var links     = JSON.parse(localStorage.getItem('bf_links') || '{}');
+var merged    = [];
 var recipeDetails = [];
+var scannedIngredients = [];
+var pendingImageBase64 = '';
+var pendingMimeType    = '';
 
-function show(id) {
+// Only these sections get deducted / checked
+var ACTIVE_SECTIONS = ['fermentables', 'hops', 'yeasts'];
+var SEC_LABELS = { fermentables: 'Fermentables', hops: 'Hops', yeasts: 'Yeasts' };
+
+// ── Screen routing ─────────────────────────────────────────────────
+function showScreen(id) {
   var screens = document.querySelectorAll('.screen');
   for (var i = 0; i < screens.length; i++) screens[i].classList.remove('active');
   document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
 }
-
 function showSetup() {
   document.getElementById('setup-user').value = userId;
   document.getElementById('setup-key').value  = apiKey;
-  show('screen-setup');
+  showScreen('screen-setup');
 }
 
+// ── API helpers ────────────────────────────────────────────────────
 async function api(path, method, body) {
   method = method || 'GET';
   var opts = {
@@ -356,10 +335,11 @@ async function api(path, method, body) {
   if (body) opts.body = JSON.stringify(body);
   var r = await fetch('/api' + path, opts);
   var txt = await r.text();
-  if (!r.ok) throw new Error('HTTP ' + r.status + ': ' + txt.slice(0,150));
+  if (!r.ok) throw new Error('HTTP ' + r.status + ': ' + txt.slice(0, 150));
   try { return JSON.parse(txt); } catch(e) { return txt; }
 }
 
+// ── Connect ────────────────────────────────────────────────────────
 async function doConnect() {
   userId = document.getElementById('setup-user').value.trim();
   apiKey  = document.getElementById('setup-key').value.trim();
@@ -370,26 +350,74 @@ async function doConnect() {
     await api('/recipes?limit=1');
     localStorage.setItem('bf_user', userId);
     localStorage.setItem('bf_key',  apiKey);
-    show('screen-home');
+    showScreen('screen-home');
   } catch(e) {
     err.textContent = 'Could not connect: ' + e.message;
     err.style.display = 'block';
   }
 }
 
+// ── Inventory ──────────────────────────────────────────────────────
+async function loadInventory() {
+  inventory = {};
+  var cats = ['fermentables', 'hops', 'yeasts', 'miscs'];
+  await Promise.all(cats.map(async function(cat) {
+    try {
+      var items = await api('/inventory/' + cat + '?limit=500');
+      inventory[cat] = Array.isArray(items) ? items : [];
+    } catch(e) { inventory[cat] = []; }
+  }));
+}
+
+function getInvAmount(item) {
+  if (!item) return 0;
+  return parseFloat(item.inventory) || 0;
+}
+
+// ── Name matching ──────────────────────────────────────────────────
+function norm(s) { return (s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
+
+function autoMatch(name, preferredCat) {
+  var saved = links[name];
+  if (saved) {
+    var cat = inventory[saved.cat] || [];
+    for (var i = 0; i < cat.length; i++) {
+      if (cat[i]._id === saved.id) return { id: cat[i]._id, cat: saved.cat, item: cat[i] };
+    }
+  }
+  var nName = norm(name);
+  var searchCats = preferredCat ? [preferredCat] : Object.keys(inventory);
+  // Try preferred category first, then all
+  var allCats = preferredCat
+    ? [preferredCat].concat(Object.keys(inventory).filter(function(c) { return c !== preferredCat; }))
+    : Object.keys(inventory);
+
+  for (var c = 0; c < allCats.length; c++) {
+    var items = inventory[allCats[c]] || [];
+    for (var i = 0; i < items.length; i++) {
+      var nItem = norm(items[i].name);
+      if (nItem === nName || nItem.includes(nName) || nName.includes(nItem)) {
+        return { id: items[i]._id, cat: allCats[c], item: items[i] };
+      }
+    }
+  }
+  return null;
+}
+
+// ── Recipe selection ───────────────────────────────────────────────
 async function startFlow(f) {
   flow = f;
   selected = {};
-  show('screen-select');
+  showScreen('screen-select');
   document.getElementById('select-title').textContent = f === 'check' ? 'Check ingredients' : 'Deduct inventory';
   document.getElementById('select-sub').textContent   = f === 'check'
-    ? 'Select one or more recipes to check your stock.'
+    ? 'Select one or more recipes to check your stock against.'
     : 'Select the recipes you just brewed.';
   document.getElementById('recipe-list').innerHTML = '<div class="loading">Loading recipes…</div>';
   updateBar();
   try {
     allRecipes = await api('/recipes?limit=50');
-allRecipes.sort(function(a,b) { return (a.name||'').localeCompare(b.name||''); });
+    allRecipes.sort(function(a, b) { return (a.name || '').localeCompare(b.name || ''); });
     renderCards();
   } catch(e) {
     document.getElementById('recipe-list').innerHTML = '<div class="alert alert-err">Error: ' + e.message + '</div>';
@@ -401,11 +429,11 @@ function renderCards() {
   var html = '';
   allRecipes.forEach(function(r) {
     var sel = !!selected[r._id];
-    html += '<div class="recipe-card' + (sel?' selected':'') + '" onclick="toggleCard(\'' + r._id + '\')">' +
+    html += '<div class="recipe-card' + (sel ? ' selected' : '') + '" onclick="toggleCard(\'' + r._id + '\')">' +
       '<div class="checkbox">' + (sel ? '✓' : '') + '</div>' +
       '<div>' +
-        '<div class="recipe-name">' + esc(r.name||'Unnamed') + '</div>' +
-        '<div class="recipe-meta">' + (r.style&&r.style.name ? esc(r.style.name)+' · ' : '') + (r.batchSize ? r.batchSize+' L' : '') + '</div>' +
+        '<div class="recipe-name">' + esc(r.name || 'Unnamed') + '</div>' +
+        '<div class="recipe-meta">' + (r.style && r.style.name ? esc(r.style.name) + ' · ' : '') + (r.batchSize ? r.batchSize + ' L' : '') + '</div>' +
       '</div>' +
     '</div>';
   });
@@ -420,79 +448,11 @@ function toggleCard(id) {
 
 function updateBar() {
   var n = Object.keys(selected).length;
-  document.getElementById('sel-count').textContent = n === 0 ? 'No recipes selected' : n + ' recipe' + (n>1?'s':'') + ' selected';
+  document.getElementById('sel-count').textContent = n === 0 ? 'No recipes selected' : n + ' recipe' + (n > 1 ? 's' : '') + ' selected';
   document.getElementById('sel-btn').disabled = n === 0;
 }
 
-async function loadInventory() {
-  inventory = {};
-  var cats = ['fermentables','hops','yeasts','miscs'];
-  await Promise.all(cats.map(async function(cat) {
-    try {
-      var items = await api('/inventory/' + cat + '?limit=500');
-      inventory[cat] = Array.isArray(items) ? items : [];
-    } catch(e) { inventory[cat] = []; }
-  }));
-}
-
-function norm(s) { return (s||'').toLowerCase().replace(/[^a-z0-9]/g,''); }
-
-function autoMatch(name) {
-  var saved = links[name];
-  if (saved) {
-    var cat = inventory[saved.cat] || [];
-    var item = null;
-    for (var i=0;i<cat.length;i++) { if (cat[i]._id === saved.id) { item = cat[i]; break; } }
-    if (item) return { id: item._id, cat: saved.cat, item: item };
-  }
-  var nName = norm(name);
-  var cats = Object.keys(inventory);
-  for (var c=0;c<cats.length;c++) {
-    var items = inventory[cats[c]];
-    for (var i=0;i<items.length;i++) {
-      var nItem = norm(items[i].name);
-      if (nItem === nName || nItem.includes(nName) || nName.includes(nItem)) {
-        return { id: items[i]._id, cat: cats[c], item: items[i] };
-      }
-    }
-  }
-  return null;
-}
-
-function getInvAmount(item) {
-  if (!item) return 0;
-  return parseFloat(item.inventory) || 0;
-}
-
-function buildMerged() {
-  var map = {};
-  recipeDetails.forEach(function(recipe) {
-    var sections = ['fermentables','hops','yeasts','miscs'];
-    sections.forEach(function(sec) {
-      var ings = recipe[sec] || [];
-      ings.forEach(function(ing) {
-        var amount = (sec==='fermentables') ? (ing.amount||0)*1000 : (ing.amount||0);
-        var unit   = sec==='yeasts' ? (ing.unit||'pkg') : 'g';
-        var key    = sec + '|' + ing.name;
-        if (map[key]) {
-          map[key].needed += amount;
-        } else {
-          var m = autoMatch(ing.name);
-          map[key] = {
-            name:   ing.name,
-            needed: amount,
-            unit:   unit,
-            sec:    sec,
-            match:  m,
-            stock:  m ? getInvAmount(m.item) : 0
-          };
-        }
-      });
-    });
-  });
-  merged = Object.values(map);
-}
-
+// ── After recipe selection ─────────────────────────────────────────
 async function onSelectionDone() {
   document.getElementById('sel-btn').disabled = true;
   document.getElementById('sel-btn').textContent = 'Loading…';
@@ -507,7 +467,7 @@ async function onSelectionDone() {
     var unmatched = merged.filter(function(i) { return !i.match; });
     if (unmatched.length > 0) {
       renderLinkScreen(unmatched);
-      show('screen-link');
+      showScreen('screen-link');
     } else {
       proceed();
     }
@@ -518,21 +478,40 @@ async function onSelectionDone() {
   document.getElementById('sel-btn').textContent = 'Continue →';
 }
 
-function renderLinkScreen(unmatched) {
-  var allOptions = [];
-  var cats = Object.keys(inventory);
-  cats.forEach(function(cat) {
-    (inventory[cat]||[]).forEach(function(item) {
-      allOptions.push({ cat: cat, item: item });
+function buildMerged() {
+  var map = {};
+  recipeDetails.forEach(function(recipe) {
+    ACTIVE_SECTIONS.forEach(function(sec) {
+      (recipe[sec] || []).forEach(function(ing) {
+        // Fermentables: kg → g. Hops: already in g. Yeasts: keep as-is.
+        var amount = sec === 'fermentables' ? (ing.amount || 0) * 1000 : (ing.amount || 0);
+        var unit   = sec === 'yeasts' ? (ing.unit || 'pkg') : 'g';
+        var key    = sec + '|' + ing.name;
+        if (map[key]) {
+          map[key].needed += amount;
+        } else {
+          var m = autoMatch(ing.name, sec);
+          map[key] = { name: ing.name, needed: amount, unit: unit, sec: sec, match: m, stock: m ? getInvAmount(m.item) : 0 };
+        }
+      });
     });
   });
-  allOptions.sort(function(a,b) { return a.item.name.localeCompare(b.item.name); });
+  merged = Object.values(map);
+}
+
+// ── Linking ────────────────────────────────────────────────────────
+function renderLinkScreen(unmatched) {
+  var allOptions = [];
+  Object.keys(inventory).forEach(function(cat) {
+    (inventory[cat] || []).forEach(function(item) { allOptions.push({ cat: cat, item: item }); });
+  });
+  allOptions.sort(function(a, b) { return a.item.name.localeCompare(b.item.name); });
 
   var html = '';
   unmatched.forEach(function(ing, i) {
     html += '<div class="link-card">' +
       '<h3>' + esc(ing.name) + ' <small style="color:#666;font-weight:400">(' + ing.sec + ')</small></h3>' +
-      '<select id="lnk-' + i + '" data-name="' + esc(ing.name) + '" data-sec="' + ing.sec + '">' +
+      '<select id="lnk-' + i + '">' +
       '<option value="">— not in my inventory —</option>' +
       allOptions.map(function(o) {
         return '<option value="' + o.item._id + '|' + o.cat + '">' + esc(o.item.name) + ' (' + o.cat + ')</option>';
@@ -549,17 +528,13 @@ function onLinkDone() {
   unmatched.forEach(function(ing, i) {
     var el = document.getElementById('lnk-' + i);
     if (!el || !el.value) return;
-    var parts  = el.value.split('|');
-    var invId  = parts[0];
-    var invCat = parts[1];
+    var parts = el.value.split('|');
+    var invId = parts[0]; var invCat = parts[1];
     links[ing.name] = { id: invId, cat: invCat };
     var entry = merged.find(function(m) { return m.name === ing.name && m.sec === ing.sec; });
     if (entry) {
-      var item = (inventory[invCat]||[]).find(function(it) { return it._id === invId; });
-      if (item) {
-        entry.match = { id: invId, cat: invCat, item: item };
-        entry.stock = getInvAmount(item);
-      }
+      var item = (inventory[invCat] || []).find(function(it) { return it._id === invId; });
+      if (item) { entry.match = { id: invId, cat: invCat, item: item }; entry.stock = getInvAmount(item); }
     }
   });
   localStorage.setItem('bf_links', JSON.stringify(links));
@@ -571,18 +546,14 @@ function proceed() {
   else renderDeduct();
 }
 
-var SEC_LABELS = { fermentables:'Fermentables', hops:'Hops', yeasts:'Yeasts', miscs:'Misc' };
-var SECS = ['fermentables','hops','yeasts','miscs'];
-
+// ── Check ──────────────────────────────────────────────────────────
 function renderCheck() {
-  show('screen-check');
-  var nOk=0, nWarn=0, nBad=0, nUnk=0;
+  showScreen('screen-check');
+  var nOk = 0, nWarn = 0, nBad = 0, nUnk = 0;
   merged.forEach(function(ing) {
     if (!ing.match) { nUnk++; return; }
     var diff = ing.stock - ing.needed;
-    if (diff >= 0) nOk++;
-    else if (ing.stock > 0) nWarn++;
-    else nBad++;
+    if (diff >= 0) nOk++; else if (ing.stock > 0) nWarn++; else nBad++;
   });
 
   var pills = '';
@@ -593,7 +564,7 @@ function renderCheck() {
   document.getElementById('check-pills').innerHTML = pills;
 
   var html = '';
-  SECS.forEach(function(sec) {
+  ACTIVE_SECTIONS.forEach(function(sec) {
     var ings = merged.filter(function(i) { return i.sec === sec; });
     if (!ings.length) return;
     html += '<div class="ing-section"><div class="ing-section-title">' + SEC_LABELS[sec] + '</div>';
@@ -603,48 +574,39 @@ function renderCheck() {
         statusHtml = '<span class="ing-status warn">? unknown</span>';
       } else {
         var diff = ing.stock - ing.needed;
-        if (diff >= 0) {
-          statusHtml = '<span class="ing-status ok">✓ ' + fmt(ing.stock) + ing.unit + ' in stock</span>';
-        } else if (ing.stock > 0) {
-          statusHtml = '<span class="ing-status warn">⚠ ' + fmt(Math.abs(diff)) + ing.unit + ' short</span>';
-        } else {
-          statusHtml = '<span class="ing-status bad">✗ not in stock</span>';
-        }
+        if (diff >= 0) statusHtml = '<span class="ing-status ok">✓ ' + fmt(ing.stock) + ing.unit + '</span>';
+        else if (ing.stock > 0) statusHtml = '<span class="ing-status warn">⚠ ' + fmt(Math.abs(diff)) + ing.unit + ' short</span>';
+        else statusHtml = '<span class="ing-status bad">✗ not in stock</span>';
       }
-      html += '<div class="ing-row">' +
-        '<div class="ing-name">' + esc(ing.name) + '<div class="ing-sub">need ' + fmt(ing.needed) + ing.unit + '</div></div>' +
-        statusHtml +
-      '</div>';
+      html += '<div class="ing-row"><div class="ing-name">' + esc(ing.name) +
+        '<div class="ing-sub">need ' + fmt(ing.needed) + ing.unit + '</div></div>' + statusHtml + '</div>';
     });
     html += '</div>';
   });
 
-  // Combined shortages if multiple recipes
+  // Combined shortages for multi-recipe
   if (recipeDetails.length > 1) {
     var shortages = merged.filter(function(i) { return i.match && (i.stock - i.needed) < 0; });
     if (shortages.length) {
       html += '<div class="ing-section"><div class="ing-section-title">Combined shortages across all recipes</div>';
       shortages.forEach(function(ing) {
-        var short = ing.needed - ing.stock;
-        html += '<div class="ing-row">' +
-          '<div class="ing-name">' + esc(ing.name) + '</div>' +
-          '<span class="ing-status bad">need ' + fmt(short) + ing.unit + ' more</span>' +
-        '</div>';
+        html += '<div class="ing-row"><div class="ing-name">' + esc(ing.name) + '</div>' +
+          '<span class="ing-status bad">need ' + fmt(ing.needed - ing.stock) + ing.unit + ' more</span></div>';
       });
       html += '</div>';
     }
   }
-
   document.getElementById('check-body').innerHTML = html;
 }
 
+// ── Deduct ─────────────────────────────────────────────────────────
 function renderDeduct() {
-  show('screen-deduct');
+  showScreen('screen-deduct');
   var matched   = merged.filter(function(i) { return  i.match; });
   var unmatched = merged.filter(function(i) { return !i.match; });
 
   document.getElementById('deduct-warn').innerHTML = unmatched.length
-    ? '<div class="alert alert-warn">⚠ ' + unmatched.length + ' ingredient(s) skipped — not linked to inventory: ' + unmatched.map(function(i){return esc(i.name);}).join(', ') + '</div>'
+    ? '<div class="alert alert-warn">⚠ ' + unmatched.length + ' ingredient(s) skipped — not linked: ' + unmatched.map(function(i) { return esc(i.name); }).join(', ') + '</div>'
     : '';
 
   if (!matched.length) {
@@ -653,7 +615,7 @@ function renderDeduct() {
   }
 
   var html = '';
-  SECS.forEach(function(sec) {
+  ACTIVE_SECTIONS.forEach(function(sec) {
     var ings = matched.filter(function(i) { return i.sec === sec; });
     if (!ings.length) return;
     html += '<div class="ing-section"><div class="ing-section-title">' + SEC_LABELS[sec] + '</div>';
@@ -683,45 +645,150 @@ async function doDeduct() {
     if (!inputEl) continue;
     var amount = parseFloat(inputEl.value) || 0;
     if (amount <= 0) continue;
-
-    var success = false;
-    // Try inventory_adjust first, then adjustAmount
+    var ok = false;
     var payloads = [{ inventory_adjust: -amount }, { adjustAmount: -amount }];
     for (var p = 0; p < payloads.length; p++) {
-      try {
-        await api('/inventory/' + ing.match.cat + '/' + ing.match.id, 'PATCH', payloads[p]);
-        success = true;
-        break;
-      } catch(e) {
-        // try next payload
-      }
+      try { await api('/inventory/' + ing.match.cat + '/' + ing.match.id, 'PATCH', payloads[p]); ok = true; break; } catch(e) {}
     }
-    if (success) deducted++;
-    else { failed++; failedNames.push(ing.name); }
+    if (ok) deducted++; else { failed++; failedNames.push(ing.name); }
   }
 
   if (deducted === 0 && failed > 0) {
-    errEl.textContent = 'All deductions failed. The API rejected the update — check that your API key has inventory write permission. Failed: ' + failedNames.join(', ');
+    errEl.textContent = 'All deductions failed. Check that your API key has inventory write permission. Failed: ' + failedNames.join(', ');
     errEl.style.display = 'block';
     return;
   }
-
-  var msg = deducted + ' ingredient' + (deducted!==1?'s':'') + ' deducted from your Brewfather inventory.';
+  var msg = deducted + ' ingredient' + (deducted !== 1 ? 's' : '') + ' deducted.';
   if (failed) msg += ' ' + failed + ' failed: ' + failedNames.join(', ');
   document.getElementById('success-msg').textContent = msg;
-  show('screen-success');
+  showScreen('screen-success');
 }
 
+// ── Screenshot scanning ────────────────────────────────────────────
+function onFileSelected(event) {
+  var file = event.target.files[0];
+  if (!file) return;
+  pendingMimeType = file.type || 'image/jpeg';
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var dataUrl = e.target.result;
+    pendingImageBase64 = dataUrl.split(',')[1];
+    var preview = document.getElementById('preview-img');
+    preview.src = dataUrl;
+    preview.style.display = 'block';
+    document.getElementById('scan-btn').style.display = 'block';
+    document.getElementById('scan-err').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+// Drag and drop
+var uploadArea = document.getElementById('upload-area');
+uploadArea.addEventListener('dragover', function(e) { e.preventDefault(); uploadArea.classList.add('dragover'); });
+uploadArea.addEventListener('dragleave', function() { uploadArea.classList.remove('dragover'); });
+uploadArea.addEventListener('drop', function(e) {
+  e.preventDefault();
+  uploadArea.classList.remove('dragover');
+  var file = e.dataTransfer.files[0];
+  if (file) { var dt = new DataTransfer(); dt.items.add(file); document.getElementById('file-input').files = dt.files; onFileSelected({ target: { files: [file] } }); }
+});
+
+async function doScan() {
+  var btn = document.getElementById('scan-btn');
+  var err = document.getElementById('scan-err');
+  err.style.display = 'none';
+  btn.textContent = 'Reading image…';
+  btn.disabled = true;
+
+  try {
+    var r = await fetch('/gemini', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageBase64: pendingImageBase64, mimeType: pendingMimeType })
+    });
+    var data = await r.json();
+    if (!r.ok) throw new Error(data.error || 'Server error');
+    var parsed = JSON.parse(data.result);
+    if (!Array.isArray(parsed) || !parsed.length) throw new Error('No ingredients found in this image.');
+    scannedIngredients = parsed;
+    renderScanConfirm();
+    showScreen('screen-scan-confirm');
+  } catch(e) {
+    err.textContent = 'Error: ' + e.message;
+    err.style.display = 'block';
+  }
+  btn.textContent = 'Read ingredients from image →';
+  btn.disabled = false;
+}
+
+function renderScanConfirm() {
+  var html = '';
+  scannedIngredients.forEach(function(ing, i) {
+    html += '<div class="scan-row">' +
+      '<span class="scan-name">' + esc(ing.name) + '</span>' +
+      '<span class="scan-type">' + esc(ing.type) + '</span>' +
+      '<input class="scan-input" type="number" min="0" step="0.1" id="sc-amt-' + i + '" value="' + (ing.amount || 0) + '">' +
+      '<span class="scan-unit">' + esc(ing.unit || 'g') + '</span>' +
+      '<button class="scan-remove" onclick="removeScanRow(' + i + ')">✕</button>' +
+    '</div>';
+  });
+  document.getElementById('scan-results').innerHTML = html || '<div class="loading">Nothing to show.</div>';
+}
+
+function removeScanRow(i) {
+  scannedIngredients.splice(i, 1);
+  renderScanConfirm();
+}
+
+async function doAddToInventory() {
+  var errEl = document.getElementById('scan-confirm-err');
+  errEl.style.display = 'none';
+  await loadInventory();
+
+  var added = 0, failed = 0, failedNames = [];
+
+  for (var i = 0; i < scannedIngredients.length; i++) {
+    var ing = scannedIngredients[i];
+    var amtEl = document.getElementById('sc-amt-' + i);
+    if (!amtEl) continue;
+    var amount = parseFloat(amtEl.value) || 0;
+    if (amount <= 0) continue;
+
+    // Map type to Brewfather category
+    var catMap = { fermentable: 'fermentables', hop: 'hops', yeast: 'yeasts' };
+    var cat = catMap[ing.type] || 'miscs';
+
+    // Try to match to existing inventory item
+    var match = autoMatch(ing.name, cat);
+
+    if (match) {
+      // Add to existing item
+      var ok = false;
+      var payloads = [{ inventory_adjust: amount }, { adjustAmount: amount }];
+      for (var p = 0; p < payloads.length; p++) {
+        try { await api('/inventory/' + match.cat + '/' + match.id, 'PATCH', payloads[p]); ok = true; break; } catch(e) {}
+      }
+      if (ok) added++; else { failed++; failedNames.push(ing.name); }
+    } else {
+      failed++;
+      failedNames.push(ing.name + ' (not in inventory — add it manually in Brewfather first)');
+    }
+  }
+
+  var msg = added + ' ingredient' + (added !== 1 ? 's' : '') + ' added to your inventory.';
+  if (failed) msg += '\n\n' + failed + ' could not be added (not found in inventory): ' + failedNames.join(', ');
+  document.getElementById('success-msg').textContent = msg;
+  showScreen('screen-success');
+}
+
+// ── Helpers ────────────────────────────────────────────────────────
 function esc(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-function fmt(n) {
-  n = parseFloat(n) || 0;
-  return Number.isInteger(n) ? n : parseFloat(n.toFixed(1));
-}
+function fmt(n) { n = parseFloat(n) || 0; return Number.isInteger(n) ? n : parseFloat(n.toFixed(1)); }
 
-// Boot
-if (userId && apiKey) show('screen-home');
+// ── Boot ───────────────────────────────────────────────────────────
+if (userId && apiKey) showScreen('screen-home');
 else showSetup();
 </script>
 </body>
