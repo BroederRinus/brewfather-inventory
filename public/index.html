@@ -765,7 +765,6 @@ async function doScan() {
     if (!Array.isArray(parsed) || !parsed.length) throw new Error('No ingredients found in this image.');
     scannedIngredients = parsed;
     await loadInventory();
-    window._inventoryInStock = await loadInventoryInStock();
     renderScanConfirm();
     showScreen('screen-scan-confirm');
   } catch(e) {
@@ -778,11 +777,9 @@ async function doScan() {
 
 function renderScanConfirm() {
   var catMap = { fermentable: 'fermentables', hop: 'hops', yeast: 'yeasts' };
-  // Use in-stock items for dropdown so user only sees what they actually have
-  var dropdownInv = window._inventoryInStock || inventory;
   var allOptions = [];
-  Object.keys(dropdownInv).forEach(function(cat) {
-    (dropdownInv[cat] || []).forEach(function(item) { allOptions.push({ cat: cat, item: item }); });
+  Object.keys(inventory).forEach(function(cat) {
+    (inventory[cat] || []).forEach(function(item) { allOptions.push({ cat: cat, item: item }); });
   });
   allOptions.sort(function(a, b) { return a.item.name.localeCompare(b.item.name); });
 
