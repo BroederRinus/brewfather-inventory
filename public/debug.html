@@ -5,16 +5,19 @@
 <h2>Brewfather API Debug</h2>
 <input id="u" placeholder="User ID" style="background:#222;color:#eee;border:1px solid #444;padding:6px;width:200px;margin-right:8px">
 <input id="k" placeholder="API Key" type="password" style="background:#222;color:#eee;border:1px solid #444;padding:6px;width:200px;margin-right:8px">
-<button onclick="run()" style="background:#e8a13a;border:none;padding:6px 14px;cursor:pointer;font-weight:bold">Fetch inventory</button>
+<button onclick="run('fermentables')" style="background:#e8a13a;border:none;padding:6px 14px;cursor:pointer;font-weight:bold;margin:4px">Fermentables</button>
+<button onclick="run('hops')" style="background:#e8a13a;border:none;padding:6px 14px;cursor:pointer;font-weight:bold;margin:4px">Hops</button>
+<button onclick="run('yeasts')" style="background:#e8a13a;border:none;padding:6px 14px;cursor:pointer;font-weight:bold;margin:4px">Yeasts</button>
+<button onclick="run('miscs')" style="background:#e8a13a;border:none;padding:6px 14px;cursor:pointer;font-weight:bold;margin:4px">Miscs</button>
 <pre id="out" style="margin-top:20px;white-space:pre-wrap;font-size:12px"></pre>
 <script>
-async function run() {
+async function run(cat) {
   var u = document.getElementById('u').value.trim();
   var k = document.getElementById('k').value.trim();
   var out = document.getElementById('out');
   out.textContent = 'Loading...';
   try {
-    var r = await fetch('/api/inventory/fermentables?limit=3', {
+    var r = await fetch('/api/inventory/' + cat + '?limit=5&complete=true', {
       headers: { 'x-bf-userid': u, 'x-bf-apikey': k }
     });
     var data = await r.json();
@@ -26,4 +29,3 @@ async function run() {
 </script>
 </body>
 </html>
-
