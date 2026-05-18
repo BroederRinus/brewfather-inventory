@@ -200,7 +200,7 @@ h1 { font-size: 20px; font-weight: 600; padding: 20px 0 4px 0; }
       <div class="menu-desc">Subtract ingredients after brewing — hops, fermentables and yeast only</div>
     </div>
   </button>
-  <button class="menu-btn" onclick="showScreen('screen-scan')">
+  <button class="menu-btn" onclick="resetScan(); showScreen('screen-scan')">
     <span class="menu-icon">📷</span>
     <div>
       <div class="menu-label">Add order to inventory</div>
@@ -274,7 +274,7 @@ h1 { font-size: 20px; font-weight: 600; padding: 20px 0 4px 0; }
 
 <!-- SCAN RESULTS / CONFIRM -->
 <div id="screen-scan-confirm" class="screen">
-  <button class="back" onclick="showScreen('screen-scan')">← Back</button>
+  <button class="back" onclick="resetScan(); showScreen('screen-scan')">← Back</button>
   <h1>Confirm ingredients</h1>
   <p class="subtitle">Check what was found. Edit amounts, remove anything wrong, then add to inventory.</p>
   <div id="scan-results"></div>
@@ -392,11 +392,24 @@ function autoMatch(name, preferredCat) {
     ? [preferredCat].concat(Object.keys(inventory).filter(function(c) { return c !== preferredCat; }))
     : Object.keys(inventory);
 
+  // Pass 1: exact match only
+  for (var c = 0; c < allCats.length; c++) {
+    var items = inventory[allCats[c]] || [];
+    for (var i = 0; i < items.length; i++) {
+      if (norm(items[i].name) === nName) {
+        return { id: items[i]._id, cat: allCats[c], item: items[i] };
+      }
+    }
+  }
+  // Pass 2: one contains the other, but only if the shorter name is at least 5 chars
+  // This prevents "grain" matching "castle malting pale ale malt"
   for (var c = 0; c < allCats.length; c++) {
     var items = inventory[allCats[c]] || [];
     for (var i = 0; i < items.length; i++) {
       var nItem = norm(items[i].name);
-      if (nItem === nName || nItem.includes(nName) || nName.includes(nItem)) {
+      var shorter = nItem.length < nName.length ? nItem : nName;
+      var longer  = nItem.length < nName.length ? nName : nItem;
+      if (shorter.length >= 5 && longer.includes(shorter)) {
         return { id: items[i]._id, cat: allCats[c], item: items[i] };
       }
     }
@@ -693,6 +706,17 @@ uploadArea.addEventListener('drop', function(e) {
   if (file) { var dt = new DataTransfer(); dt.items.add(file); document.getElementById('file-input').files = dt.files; onFileSelected({ target: { files: [file] } }); }
 });
 
+function resetScan() {
+  pendingImageBase64 = "";
+  pendingMimeType = "";
+  var preview = document.getElementById("preview-img");
+  preview.src = "";
+  preview.style.display = "none";
+  document.getElementById("scan-btn").style.display = "none";
+  document.getElementById("scan-err").style.display = "none";
+  document.getElementById("file-input").value = "";
+}
+
 async function doScan() {
   var btn = document.getElementById('scan-btn');
   var err = document.getElementById('scan-err');
@@ -711,6 +735,7 @@ async function doScan() {
     var parsed = JSON.parse(data.result);
     if (!Array.isArray(parsed) || !parsed.length) throw new Error('No ingredients found in this image.');
     scannedIngredients = parsed;
+    await loadInventory();
     renderScanConfirm();
     showScreen('screen-scan-confirm');
   } catch(e) {
@@ -722,17 +747,41 @@ async function doScan() {
 }
 
 function renderScanConfirm() {
+  var catMap = { fermentable: 'fermentables', hop: 'hops', yeast: 'yeasts' };
+  var allOptions = [];
+  Object.keys(inventory).forEach(function(cat) {
+    (inventory[cat] || []).forEach(function(item) { allOptions.push({ cat: cat, item: item }); });
+  });
+  allOptions.sort(function(a, b) { return a.item.name.localeCompare(b.item.name); });
+
   var html = '';
   scannedIngredients.forEach(function(ing, i) {
-    html += '<div class="scan-row">' +
-      '<span class="scan-name">' + esc(ing.name) + '</span>' +
-      '<span class="scan-type">' + esc(ing.type) + '</span>' +
-      '<input class="scan-input" type="number" min="0" step="0.1" id="sc-amt-' + i + '" value="' + (ing.amount || 0) + '">' +
-      '<span class="scan-unit">' + esc(ing.unit || 'g') + '</span>' +
-      '<button class="scan-remove" onclick="removeScanRow(' + i + ')">✕</button>' +
-    '</div>';
+    var cat = catMap[ing.type] || 'miscs';
+    var match = autoMatch(ing.name, cat);
+    var matchId = match ? (match.id + '|' + match.cat) : '';
+
+    html += '<div class="ing-row" style="flex-wrap:wrap;gap:6px;align-items:flex-start;padding:10px 12px 8px">' +
+      '<div style="display:flex;align-items:center;gap:8px;width:100%">' +
+        '<span class="ing-name" style="flex:1">' + esc(ing.name) + '</span>' +
+        '<span style="font-size:11px;color:#666;min-width:70px">' + esc(ing.type) + '</span>' +
+        '<input class="ing-input" type="number" min="0" step="0.1" id="sc-amt-' + i + '" value="' + (ing.amount || 0) + '">' +
+        '<span class="ing-unit">' + esc(ing.unit || 'g') + '</span>' +
+        '<button class="scan-remove" onclick="removeScanRow(' + i + ')">✕</button>' +
+      '</div>' +
+      '<select id="sc-inv-' + i + '" style="width:100%;background:#111;border:1px solid ' + (match ? '#3a7d44' : '#604010') + ';border-radius:6px;color:#eee;font-size:12px;padding:5px 8px;outline:none;margin-top:4px">' +
+        '<option value="">— not in inventory —</option>' +
+        allOptions.map(function(o) {
+          var val = o.item._id + '|' + o.cat;
+          var sel = (val === matchId) ? ' selected' : '';
+          return '<option value="' + val + '"' + sel + '>' + esc(o.item.name) + ' (' + o.cat + ')<\/option>';
+        }).join('') +
+      '<\/select>' +
+      (match
+        ? '<div style="font-size:11px;color:#4aaa70;margin-top:3px">✓ auto-matched<\/div>'
+        : '<div style="font-size:11px;color:#e0a030;margin-top:3px">⚠ not matched — please select from list<\/div>') +
+    '<\/div>';
   });
-  document.getElementById('scan-results').innerHTML = html || '<div class="loading">Nothing to show.</div>';
+  document.getElementById('scan-results').innerHTML = html || '<div class="loading">Nothing to show.<\/div>';
 }
 
 function removeScanRow(i) {
@@ -743,40 +792,36 @@ function removeScanRow(i) {
 async function doAddToInventory() {
   var errEl = document.getElementById('scan-confirm-err');
   errEl.style.display = 'none';
-  await loadInventory();
-
   var added = 0, failed = 0, failedNames = [];
 
   for (var i = 0; i < scannedIngredients.length; i++) {
     var ing = scannedIngredients[i];
     var amtEl = document.getElementById('sc-amt-' + i);
+    var invEl = document.getElementById('sc-inv-' + i);
     if (!amtEl) continue;
     var amount = parseFloat(amtEl.value) || 0;
     if (amount <= 0) continue;
 
-    // Map type to Brewfather category
-    var catMap = { fermentable: 'fermentables', hop: 'hops', yeast: 'yeasts' };
-    var cat = catMap[ing.type] || 'miscs';
+    var invVal = invEl ? invEl.value : '';
+    if (!invVal) { failed++; failedNames.push(ing.name + ' (no inventory item selected)'); continue; }
 
-    // Try to match to existing inventory item
-    var match = autoMatch(ing.name, cat);
+    var parts = invVal.split('|');
+    var invId = parts[0]; var invCat = parts[1];
 
-    if (match) {
-      // Add to existing item
-      var ok = false;
-      var payloads = [{ inventory_adjust: amount }, { adjustAmount: amount }];
-      for (var p = 0; p < payloads.length; p++) {
-        try { await api('/inventory/' + match.cat + '/' + match.id, 'PATCH', payloads[p]); ok = true; break; } catch(e) {}
-      }
-      if (ok) added++; else { failed++; failedNames.push(ing.name); }
-    } else {
-      failed++;
-      failedNames.push(ing.name + ' (not in inventory — add it manually in Brewfather first)');
+    // Save link for future
+    links[ing.name] = { id: invId, cat: invCat };
+    localStorage.setItem('bf_links', JSON.stringify(links));
+
+    var ok = false;
+    var payloads = [{ inventory_adjust: amount }, { adjustAmount: amount }];
+    for (var p = 0; p < payloads.length; p++) {
+      try { await api('/inventory/' + invCat + '/' + invId, 'PATCH', payloads[p]); ok = true; break; } catch(e) {}
     }
+    if (ok) added++; else { failed++; failedNames.push(ing.name); }
   }
 
   var msg = added + ' ingredient' + (added !== 1 ? 's' : '') + ' added to your inventory.';
-  if (failed) msg += '\n\n' + failed + ' could not be added (not found in inventory): ' + failedNames.join(', ');
+  if (failed) msg += ' ' + failed + ' skipped: ' + failedNames.join(', ');
   document.getElementById('success-msg').textContent = msg;
   showScreen('screen-success');
 }
