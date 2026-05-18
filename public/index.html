@@ -406,7 +406,14 @@ function autoMatch(name, preferredCat) {
     ? [preferredCat].concat(Object.keys(inventory).filter(function(c) { return c !== preferredCat; }))
     : Object.keys(inventory);
 
-  // Pass 1: exact match only
+  // Helper: does the scanned name mention this item's supplier?
+  function supplierMatch(item, scannedName) {
+    var sup = (item.supplier || item.origin || '').toLowerCase();
+    if (!sup || sup.length < 3) return false;
+    return scannedName.toLowerCase().includes(sup.split(' ')[0]); // match first word of supplier
+  }
+
+  // Pass 1: exact name match
   for (var c = 0; c < allCats.length; c++) {
     var items = inventory[allCats[c]] || [];
     for (var i = 0; i < items.length; i++) {
@@ -415,8 +422,17 @@ function autoMatch(name, preferredCat) {
       }
     }
   }
-  // Pass 2: one contains the other, but only if shorter is at least 5 chars
-  // This prevents "grain" matching "castle malting pale ale malt"
+  // Pass 2: name contained in scanned name AND supplier mentioned — e.g. "Castle Malting Pale Ale Malt" contains "Pale Ale Malt" and mentions "Castle"
+  for (var c = 0; c < allCats.length; c++) {
+    var items = inventory[allCats[c]] || [];
+    for (var i = 0; i < items.length; i++) {
+      var nItem = norm(items[i].name);
+      if (nItem.length >= 5 && nName.includes(nItem) && supplierMatch(items[i], name)) {
+        return { id: items[i]._id, cat: allCats[c], item: items[i] };
+      }
+    }
+  }
+  // Pass 3: one contains the other, but only if shorter is at least 5 chars
   for (var c = 0; c < allCats.length; c++) {
     var items = inventory[allCats[c]] || [];
     for (var i = 0; i < items.length; i++) {
