@@ -401,7 +401,7 @@ function autoMatch(name, preferredCat) {
       }
     }
   }
-  // Pass 2: one contains the other, but only if the shorter name is at least 5 chars
+  // Pass 2: one contains the other, but only if shorter is at least 5 chars
   // This prevents "grain" matching "castle malting pale ale malt"
   for (var c = 0; c < allCats.length; c++) {
     var items = inventory[allCats[c]] || [];
@@ -410,6 +410,21 @@ function autoMatch(name, preferredCat) {
       var shorter = nItem.length < nName.length ? nItem : nName;
       var longer  = nItem.length < nName.length ? nName : nItem;
       if (shorter.length >= 5 && longer.includes(shorter)) {
+        return { id: items[i]._id, cat: allCats[c], item: items[i] };
+      }
+    }
+  }
+  // Pass 3: word overlap — split into words and check if enough key words match
+  // This catches "Safale US-05" vs "Safale American Ale US-05" etc.
+  var nameWords = name.toLowerCase().split(/[^a-z0-9]+/).filter(function(w) { return w.length >= 3; });
+  for (var c = 0; c < allCats.length; c++) {
+    var items = inventory[allCats[c]] || [];
+    for (var i = 0; i < items.length; i++) {
+      var itemWords = items[i].name.toLowerCase().split(/[^a-z0-9]+/).filter(function(w) { return w.length >= 3; });
+      var matches = nameWords.filter(function(w) { return itemWords.indexOf(w) !== -1; });
+      // Match if at least 2 words overlap, or 1 word overlaps and it's a product code (has digits)
+      var hasCode = matches.some(function(w) { return /\d/.test(w); });
+      if (matches.length >= 2 || (matches.length >= 1 && hasCode)) {
         return { id: items[i]._id, cat: allCats[c], item: items[i] };
       }
     }
