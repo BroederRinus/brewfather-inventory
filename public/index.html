@@ -364,7 +364,7 @@ async function loadInventory() {
   // Fetch ALL items (including zero stock) so we can match and update any of them
   await Promise.all(cats.map(async function(cat) {
     try {
-      var items = await api('/inventory/' + cat + '?limit=500');
+      var items = await api('/inventory/' + cat + '?limit=500&complete=true');
       inventory[cat] = Array.isArray(items) ? items : [];
     } catch(e) { inventory[cat] = []; }
   }));
