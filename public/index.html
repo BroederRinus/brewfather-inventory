@@ -361,12 +361,26 @@ async function doConnect() {
 async function loadInventory() {
   inventory = {};
   var cats = ['fermentables', 'hops', 'yeasts', 'miscs'];
+  // Fetch ALL items (including zero stock) so we can match and update any of them
   await Promise.all(cats.map(async function(cat) {
     try {
       var items = await api('/inventory/' + cat + '?limit=500');
       inventory[cat] = Array.isArray(items) ? items : [];
     } catch(e) { inventory[cat] = []; }
   }));
+}
+
+// Separate function for dropdown: only items actually in stock
+async function loadInventoryInStock() {
+  var inStock = {};
+  var cats = ['fermentables', 'hops', 'yeasts', 'miscs'];
+  await Promise.all(cats.map(async function(cat) {
+    try {
+      var items = await api('/inventory/' + cat + '?limit=500&inventory_only=true');
+      inStock[cat] = Array.isArray(items) ? items : [];
+    } catch(e) { inStock[cat] = []; }
+  }));
+  return inStock;
 }
 
 function getInvAmount(item) {
@@ -751,6 +765,7 @@ async function doScan() {
     if (!Array.isArray(parsed) || !parsed.length) throw new Error('No ingredients found in this image.');
     scannedIngredients = parsed;
     await loadInventory();
+    window._inventoryInStock = await loadInventoryInStock();
     renderScanConfirm();
     showScreen('screen-scan-confirm');
   } catch(e) {
@@ -763,9 +778,11 @@ async function doScan() {
 
 function renderScanConfirm() {
   var catMap = { fermentable: 'fermentables', hop: 'hops', yeast: 'yeasts' };
+  // Use in-stock items for dropdown so user only sees what they actually have
+  var dropdownInv = window._inventoryInStock || inventory;
   var allOptions = [];
-  Object.keys(inventory).forEach(function(cat) {
-    (inventory[cat] || []).forEach(function(item) { allOptions.push({ cat: cat, item: item }); });
+  Object.keys(dropdownInv).forEach(function(cat) {
+    (dropdownInv[cat] || []).forEach(function(item) { allOptions.push({ cat: cat, item: item }); });
   });
   allOptions.sort(function(a, b) { return a.item.name.localeCompare(b.item.name); });
 
