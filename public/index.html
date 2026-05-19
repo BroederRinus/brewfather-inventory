@@ -361,11 +361,20 @@ async function doConnect() {
 async function loadInventory() {
   inventory = {};
   var cats = ['fermentables', 'hops', 'yeasts', 'miscs'];
-  // Fetch ALL items (including zero stock) so we can match and update any of them
   await Promise.all(cats.map(async function(cat) {
     try {
-      var items = await api('/inventory/' + cat + '?limit=500&complete=true');
-      inventory[cat] = Array.isArray(items) ? items : [];
+      var all = [];
+      var lastId = null;
+      while (true) {
+        var url = '/inventory/' + cat + '?limit=50&complete=true';
+        if (lastId) url += '&start_after=' + lastId;
+        var items = await api(url);
+        if (!Array.isArray(items) || items.length === 0) break;
+        all = all.concat(items);
+        if (items.length < 50) break; // last page
+        lastId = items[items.length - 1]._id;
+      }
+      inventory[cat] = all;
     } catch(e) { inventory[cat] = []; }
   }));
 }
