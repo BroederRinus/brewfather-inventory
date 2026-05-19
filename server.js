@@ -43,16 +43,16 @@ app.post('/gemini', async (req, res) => {
 Extract all ingredients from this image. Only include fermentables (malts, grains, adjuncts), hops, and yeasts. Do NOT include water treatments, brewing salts, acids, finings, or any other additives.
 Return ONLY a JSON array, no explanation, no markdown. Each item should have:
 - name (string): the ingredient name
-- amount (number): the quantity as a number
-- unit (string): the unit, e.g. "g", "kg", "oz", "lb", "pkg"
+- amount (number): the quantity as a number, always converted to grams for fermentables and hops
+- unit (string): ALWAYS use "g" for fermentables and hops (convert kg to g by multiplying by 1000), ALWAYS use "pkg" for yeasts regardless of what the order says
 - type (string): one of "fermentable", "hop", "yeast"
 
 Example output:
-[{"name":"Pale Malt","amount":4000,"unit":"g","type":"fermentable"},{"name":"Citra","amount":50,"unit":"g","type":"hop"}]`;
+[{"name":"Pale Malt","amount":4000,"unit":"g","type":"fermentable"},{"name":"Citra","amount":50,"unit":"g","type":"hop"},{"name":"Safale US-05","amount":1,"unit":"pkg","type":"yeast"}]`;
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${geminiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
