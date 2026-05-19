@@ -951,9 +951,20 @@ async function doAddToInventory() {
     localStorage.setItem('bf_links', JSON.stringify(links));
 
     var ok = false;
-    // Send the unit Gemini identified so Brewfather stores it correctly
-    var patchBody = { inventory_adjust: amount, unit: ing.unit || 'g' };
-    var payloads = [patchBody, { adjustAmount: amount }];
+    var unit = ing.unit || 'g';
+    // First correct the unit on the inventory item, then add stock
+    try { await api('/inventory/' + invCat + '/' + invId, 'PATCH', { unit: unit }); } catch(e) {}
+    // Now fetch current stock and set the new total
+    var currentStock = 0;
+    try {
+      var current = await api('/inventory/' + invCat + '/' + invId);
+      currentStock = parseFloat(current.inventory) || 0;
+    } catch(e) {}
+    var payloads = [
+      { inventory: currentStock + amount, unit: unit },
+      { inventory_adjust: amount, unit: unit },
+      { adjustAmount: amount }
+    ];
     for (var p = 0; p < payloads.length; p++) {
       try { await api('/inventory/' + invCat + '/' + invId, 'PATCH', payloads[p]); ok = true; break; } catch(e) {}
     }
