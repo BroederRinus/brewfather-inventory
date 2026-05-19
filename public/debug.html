@@ -7,12 +7,9 @@
 <input id="k" placeholder="API Key" type="password" style="background:#222;color:#eee;border:1px solid #444;padding:6px;width:180px;margin-right:6px">
 <br><br>
 <input id="search" placeholder="filter by name" style="background:#222;color:#eee;border:1px solid #444;padding:6px;width:180px;margin-right:6px">
-<button onclick="runInv('fermentables')" style="background:#e8a13a;border:none;padding:6px 12px;cursor:pointer;font-weight:bold;margin:3px">Inv: Fermentables</button>
-<button onclick="runInv('hops')" style="background:#e8a13a;border:none;padding:6px 12px;cursor:pointer;font-weight:bold;margin:3px">Inv: Hops</button>
-<button onclick="runInv('yeasts')" style="background:#e8a13a;border:none;padding:6px 12px;cursor:pointer;font-weight:bold;margin:3px">Inv: Yeasts</button>
-<br><br>
-<input id="recipeid" placeholder="Recipe ID (from URL in Brewfather)" style="background:#222;color:#eee;border:1px solid #444;padding:6px;width:300px;margin-right:6px">
-<button onclick="runRecipe()" style="background:#4a7a50;border:none;padding:6px 12px;cursor:pointer;font-weight:bold;margin:3px">Fetch Recipe Ingredients</button>
+<button onclick="runInv('fermentables')" style="background:#e8a13a;border:none;padding:6px 12px;cursor:pointer;font-weight:bold;margin:3px">Fermentables</button>
+<button onclick="runInv('hops')" style="background:#e8a13a;border:none;padding:6px 12px;cursor:pointer;font-weight:bold;margin:3px">Hops</button>
+<button onclick="runInv('yeasts')" style="background:#e8a13a;border:none;padding:6px 12px;cursor:pointer;font-weight:bold;margin:3px">Yeasts</button>
 <pre id="out" style="margin-top:20px;white-space:pre-wrap;font-size:12px"></pre>
 <script>
 async function runInv(cat) {
@@ -27,32 +24,7 @@ async function runInv(cat) {
     });
     var data = await r.json();
     if (search) data = data.filter(function(i) { return (i.name||'').toLowerCase().includes(search.toLowerCase()); });
-    var slim = data.map(function(i) { return { _id: i._id, name: i.name, supplier: i.supplier, productId: i.productId, inventory: i.inventory }; });
-    out.textContent = JSON.stringify(slim, null, 2);
-  } catch(e) { out.textContent = 'Error: ' + e.message; }
-}
-
-async function runRecipe() {
-  var u = document.getElementById('u').value.trim();
-  var k = document.getElementById('k').value.trim();
-  var id = document.getElementById('recipeid').value.trim();
-  var search = document.getElementById('search').value.trim();
-  var out = document.getElementById('out');
-  out.textContent = 'Loading...';
-  try {
-    var r = await fetch('/api/recipes/' + id, {
-      headers: { 'x-bf-userid': u, 'x-bf-apikey': k }
-    });
-    var recipe = await r.json();
-    var result = {};
-    ['fermentables','hops','yeasts','miscs'].forEach(function(sec) {
-      var ings = (recipe[sec] || []).map(function(i) {
-        return { _id: i._id, name: i.name, amount: i.amount, unit: i.unit };
-      });
-      if (search) ings = ings.filter(function(i) { return (i.name||'').toLowerCase().includes(search.toLowerCase()); });
-      if (ings.length) result[sec] = ings;
-    });
-    out.textContent = JSON.stringify(result, null, 2);
+    out.textContent = JSON.stringify(data, null, 2);
   } catch(e) { out.textContent = 'Error: ' + e.message; }
 }
 </script>
