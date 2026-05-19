@@ -790,7 +790,9 @@ async function doDeduct() {
     var amount = parseFloat(inputEl.value) || 0;
     if (amount <= 0) continue;
     var ok = false;
-    var payloads = [{ inventory_adjust: -amount }, { adjustAmount: -amount }];
+    var deductBody = { inventory_adjust: -amount };
+    if (ing.match.cat === 'yeasts') deductBody.unit = 'pkg';
+    var payloads = [deductBody, { adjustAmount: -amount }];
     for (var p = 0; p < payloads.length; p++) {
       try { await api('/inventory/' + ing.match.cat + '/' + ing.match.id, 'PATCH', payloads[p]); ok = true; break; } catch(e) {}
     }
@@ -897,7 +899,9 @@ function renderScanConfirm() {
         '<span class="ing-name" style="flex:1">' + esc(ing.name) + '</span>' +
         '<span style="font-size:11px;color:#666;min-width:70px">' + esc(ing.type) + '</span>' +
         '<input class="ing-input" type="number" min="0" step="0.1" id="sc-amt-' + i + '" value="' + (ing.amount || 0) + '">' +
-        '<span class="ing-unit">' + esc(ing.unit || 'g') + '</span>' +
+        '<select id="sc-unit-' + i + '" style="background:#111;border:1px solid #333;border-radius:6px;color:#eee;font-size:12px;padding:4px 6px;outline:none">' +
+        ['g','kg','pkg','ml','oz','lb'].map(function(u) { return '<option value="' + u + '"' + (u === (ing.unit||'g') ? ' selected' : '') + '>' + u + '</option>'; }).join('') +
+        '</select>' +
         '<button class="scan-remove" onclick="removeScanRow(' + i + ')">✕</button>' +
       '</div>' +
       '<select id="sc-inv-' + i + '" style="width:100%;background:#111;border:1px solid ' + (match ? '#3a7d44' : '#604010') + ';border-radius:6px;color:#eee;font-size:12px;padding:5px 8px;outline:none;margin-top:4px">' +
@@ -929,9 +933,11 @@ async function doAddToInventory() {
   for (var i = 0; i < scannedIngredients.length; i++) {
     var ing = scannedIngredients[i];
     var amtEl = document.getElementById('sc-amt-' + i);
+    var unitEl = document.getElementById('sc-unit-' + i);
     var invEl = document.getElementById('sc-inv-' + i);
     if (!amtEl) continue;
     var amount = parseFloat(amtEl.value) || 0;
+    ing.unit = unitEl ? unitEl.value : (ing.unit || 'g');
     if (amount <= 0) continue;
 
     var invVal = invEl ? invEl.value : '';
@@ -945,7 +951,9 @@ async function doAddToInventory() {
     localStorage.setItem('bf_links', JSON.stringify(links));
 
     var ok = false;
-    var payloads = [{ inventory_adjust: amount }, { adjustAmount: amount }];
+    // Send the unit Gemini identified so Brewfather stores it correctly
+    var patchBody = { inventory_adjust: amount, unit: ing.unit || 'g' };
+    var payloads = [patchBody, { adjustAmount: amount }];
     for (var p = 0; p < payloads.length; p++) {
       try { await api('/inventory/' + invCat + '/' + invId, 'PATCH', payloads[p]); ok = true; break; } catch(e) {}
     }
