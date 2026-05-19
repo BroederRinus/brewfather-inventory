@@ -207,6 +207,13 @@ h1 { font-size: 20px; font-weight: 600; padding: 20px 0 4px 0; }
       <div class="menu-desc">Upload a screenshot of an order to add ingredients automatically</div>
     </div>
   </button>
+  <button class="menu-btn" onclick="showScreen('screen-setup-inv')">
+    <span class="menu-icon">📦</span>
+    <div>
+      <div class="menu-label">Setup inventory</div>
+      <div class="menu-desc">Generate a file to import all your recipe ingredients into Brewfather inventory at once</div>
+    </div>
+  </button>
   <button class="btn btn-small" onclick="showSetup()">⚙ Change credentials</button>
 </div>
 
@@ -280,6 +287,15 @@ h1 { font-size: 20px; font-weight: 600; padding: 20px 0 4px 0; }
   <div id="scan-results"></div>
   <div id="scan-confirm-err" class="alert alert-err" style="display:none"></div>
   <button class="btn btn-orange" onclick="doAddToInventory()">Add to inventory →</button>
+</div>
+
+<!-- SETUP INVENTORY -->
+<div id="screen-setup-inv" class="screen">
+  <button class="back" onclick="showScreen('screen-home')">← Back</button>
+  <h1>Setup inventory</h1>
+  <p class="subtitle">This will fetch all ingredients from all your recipes and generate a BeerXML file. Import that file into Brewfather (Inventory → Import) to add every ingredient to your inventory at once — all at 0 stock. After that, the app will find all ingredients automatically.</p>
+  <div id="setup-inv-status"></div>
+  <button class="btn btn-orange" id="setup-inv-btn" onclick="doGenerateBeerXML()">Generate BeerXML file →</button>
 </div>
 
 <!-- SUCCESS -->
@@ -907,6 +923,87 @@ function esc(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 function fmt(n) { n = parseFloat(n) || 0; return Number.isInteger(n) ? n : parseFloat(n.toFixed(1)); }
+
+// ── Generate BeerXML from all recipes ────────────────────────────────────────
+async function doGenerateBeerXML() {
+  var btn = document.getElementById('setup-inv-btn');
+  var status = document.getElementById('setup-inv-status');
+  btn.disabled = true;
+  btn.textContent = 'Loading recipes...';
+  status.innerHTML = '';
+  try {
+    var allRecs = [];
+    var lastId = null;
+    while (true) {
+      var url = '/recipes?limit=50';
+      if (lastId) url += '&start_after=' + lastId;
+      var page = await api(url);
+      if (!Array.isArray(page) || !page.length) break;
+      allRecs = allRecs.concat(page);
+      if (page.length < 50) break;
+      lastId = page[page.length - 1]._id;
+    }
+    status.innerHTML = '<div class="alert alert-warn">Found ' + allRecs.length + ' recipes. Loading ingredients...</div>';
+    btn.textContent = 'Loading ingredients...';
+    var details = await Promise.all(allRecs.map(function(r) { return api('/recipes/' + r._id); }));
+    var fermentables = {}, hops = {}, yeasts = {};
+    details.forEach(function(recipe) {
+      (recipe.fermentables || []).forEach(function(i) { if (i._id && i.name) fermentables[i._id] = i; });
+      (recipe.hops || []).forEach(function(i) { if (i._id && i.name) hops[i._id] = i; });
+      (recipe.yeasts || []).forEach(function(i) { if (i._id && i.name) yeasts[i._id] = i; });
+    });
+    var fList = Object.values(fermentables);
+    var hList = Object.values(hops);
+    var yList = Object.values(yeasts);
+    var total = fList.length + hList.length + yList.length;
+    var xml = '<?xml version="1.0" encoding="UTF-8"?>\n<RECIPES>\n<RECIPE>\n';
+    xml += '<NAME>Inventory Setup</NAME>\n<VERSION>1</VERSION>\n<TYPE>All Grain</TYPE>\n';
+    xml += '<BREWER>Setup</BREWER>\n<BATCH_SIZE>20</BATCH_SIZE>\n<BOIL_SIZE>25</BOIL_SIZE>\n';
+    xml += '<BOIL_TIME>60</BOIL_TIME>\n<EFFICIENCY>75</EFFICIENCY>\n';
+    xml += '<FERMENTABLES>\n';
+    fList.forEach(function(i) {
+      xml += '<FERMENTABLE>\n<NAME>' + xe(i.name) + '</NAME>\n<VERSION>1</VERSION>\n';
+      xml += '<AMOUNT>0</AMOUNT>\n<TYPE>' + xe(i.type||'Grain') + '</TYPE>\n';
+      xml += '<YIELD>' + (i.potentialPercentage||75) + '</YIELD>\n<COLOR>' + (i.color||3) + '</COLOR>\n';
+      if (i.supplier) xml += '<SUPPLIER>' + xe(i.supplier) + '</SUPPLIER>\n';
+      if (i.origin) xml += '<ORIGIN>' + xe(i.origin) + '</ORIGIN>\n';
+      xml += '<INVENTORY>0</INVENTORY>\n</FERMENTABLE>\n';
+    });
+    xml += '</FERMENTABLES>\n<HOPS>\n';
+    hList.forEach(function(i) {
+      xml += '<HOP>\n<NAME>' + xe(i.name) + '</NAME>\n<VERSION>1</VERSION>\n';
+      xml += '<AMOUNT>0</AMOUNT>\n<ALPHA>' + (i.alpha||5) + '</ALPHA>\n';
+      xml += '<USE>' + xe(i.use||'Boil') + '</USE>\n<TIME>60</TIME>\n';
+      if (i.origin) xml += '<ORIGIN>' + xe(i.origin) + '</ORIGIN>\n';
+      xml += '<INVENTORY>0</INVENTORY>\n</HOP>\n';
+    });
+    xml += '</HOPS>\n<YEASTS>\n';
+    yList.forEach(function(i) {
+      xml += '<YEAST>\n<NAME>' + xe(i.name) + '</NAME>\n<VERSION>1</VERSION>\n';
+      xml += '<AMOUNT>0</AMOUNT>\n<TYPE>' + xe(i.type||'Ale') + '</TYPE>\n';
+      xml += '<FORM>' + xe(i.form||'Dry') + '</FORM>\n';
+      xml += '<LABORATORY>' + xe(i.laboratory||'') + '</LABORATORY>\n';
+      xml += '<PRODUCT_ID>' + xe(i.productId||'') + '</PRODUCT_ID>\n';
+      xml += '<ATTENUATION>' + (i.attenuation||75) + '</ATTENUATION>\n';
+      xml += '<INVENTORY>0</INVENTORY>\n</YEAST>\n';
+    });
+    xml += '</YEASTS>\n</RECIPE>\n</RECIPES>';
+    var blob = new Blob([xml], { type: 'application/xml' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'brewfather-inventory-setup.xml';
+    a.click();
+    status.innerHTML = '<div class="alert alert-ok">Done! Generated ' + total + ' ingredients (' + fList.length + ' fermentables, ' + hList.length + ' hops, ' + yList.length + ' yeasts).<br><br>Now go to <strong>Brewfather → Inventory → Import</strong> and import the downloaded file.</div>';
+  } catch(e) {
+    status.innerHTML = '<div class="alert alert-err">Error: ' + e.message + '</div>';
+  }
+  btn.disabled = false;
+  btn.textContent = 'Generate BeerXML file →';
+}
+
+function xe(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 
 // ── Boot ───────────────────────────────────────────────────────────
 if (userId && apiKey) showScreen('screen-home');
