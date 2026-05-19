@@ -563,14 +563,23 @@ function buildMerged() {
   recipeDetails.forEach(function(recipe) {
     ACTIVE_SECTIONS.forEach(function(sec) {
       (recipe[sec] || []).forEach(function(ing) {
-        // Fermentables: kg → g. Hops: already in g. Yeasts: keep as-is.
         var amount = sec === 'fermentables' ? (ing.amount || 0) * 1000 : (ing.amount || 0);
         var unit   = sec === 'yeasts' ? (ing.unit || 'pkg') : 'g';
-        var key    = sec + '|' + ing.name;
+        var key    = sec + '|' + ing._id;
         if (map[key]) {
           map[key].needed += amount;
         } else {
-          var m = autoMatch(ing.name, sec);
+          // First try direct _id match against inventory (most reliable)
+          var directMatch = null;
+          var invItems = inventory[sec] || [];
+          for (var i = 0; i < invItems.length; i++) {
+            if (invItems[i]._id === ing._id) {
+              directMatch = { id: invItems[i]._id, cat: sec, item: invItems[i] };
+              break;
+            }
+          }
+          // Fall back to name matching if direct match fails
+          var m = directMatch || autoMatch(ing.name, sec);
           map[key] = { name: ing.name, needed: amount, unit: unit, sec: sec, match: m, stock: m ? getInvAmount(m.item) : 0 };
         }
       });
