@@ -413,14 +413,20 @@ function getInvAmount(item) {
   return parseFloat(item.inventory) || 0;
 }
 
-// When multiple inventory items match the same ingredient, prefer pkg over ml for yeasts
+// When multiple inventory items match, prefer the one with actual stock, then non-default entries
 function preferredMatch(matches, sec) {
   if (!matches || !matches.length) return null;
-  if (sec === 'yeasts') {
-    var pkg = matches.find(function(m) { return (m.item.unit || '').toLowerCase() === 'pkg'; });
-    if (pkg) return pkg;
-  }
-  return matches[0];
+  // Sort: actual stock first, then non-default IDs, then anything
+  var sorted = matches.slice().sort(function(a, b) {
+    var aStock = parseFloat(a.item.inventory) || 0;
+    var bStock = parseFloat(b.item.inventory) || 0;
+    if (bStock !== aStock) return bStock - aStock; // higher stock first
+    // Prefer non-default entries (user-created)
+    var aDefault = a.id.startsWith('default-') ? 1 : 0;
+    var bDefault = b.id.startsWith('default-') ? 1 : 0;
+    return aDefault - bDefault;
+  });
+  return sorted[0];
 }
 
 // ── Name matching ──────────────────────────────────────────────────
