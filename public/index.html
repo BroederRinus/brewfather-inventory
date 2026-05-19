@@ -413,8 +413,37 @@ function getInvAmount(item) {
   return parseFloat(item.inventory) || 0;
 }
 
+// When multiple inventory items match the same ingredient, prefer pkg over ml for yeasts
+function preferredMatch(matches, sec) {
+  if (!matches || !matches.length) return null;
+  if (sec === 'yeasts') {
+    var pkg = matches.find(function(m) { return (m.item.unit || '').toLowerCase() === 'pkg'; });
+    if (pkg) return pkg;
+  }
+  return matches[0];
+}
+
 // ── Name matching ──────────────────────────────────────────────────
 function norm(s) { return (s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
+
+function autoMatchAll(name, preferredCat) {
+  // Returns ALL matching inventory items, not just the first
+  var results = [];
+  var nName = norm(name);
+  var allCats = preferredCat
+    ? [preferredCat].concat(Object.keys(inventory).filter(function(c) { return c !== preferredCat; }))
+    : Object.keys(inventory);
+  for (var c = 0; c < allCats.length; c++) {
+    var items = inventory[allCats[c]] || [];
+    for (var i = 0; i < items.length; i++) {
+      var nItem = norm(items[i].name);
+      if (nItem === nName) {
+        results.push({ id: items[i]._id, cat: allCats[c], item: items[i] });
+      }
+    }
+  }
+  return results;
+}
 
 function autoMatch(name, preferredCat) {
   var saved = links[name];
@@ -586,16 +615,20 @@ function buildMerged() {
           map[key].needed += amount;
         } else {
           // First try direct _id match against inventory (most reliable)
-          var directMatch = null;
+          var directMatches = [];
           var invItems = inventory[sec] || [];
           for (var i = 0; i < invItems.length; i++) {
             if (invItems[i]._id === ing._id) {
-              directMatch = { id: invItems[i]._id, cat: sec, item: invItems[i] };
-              break;
+              directMatches.push({ id: invItems[i]._id, cat: sec, item: invItems[i] });
             }
           }
-          // Fall back to name matching if direct match fails
-          var m = directMatch || autoMatch(ing.name, sec);
+          // Also find any name matches (catches duplicates)
+          var nameMatches = autoMatchAll(ing.name, sec);
+          var allMatches = directMatches.concat(nameMatches.filter(function(m) {
+            return !directMatches.find(function(d) { return d.id === m.id; });
+          }));
+          // Pick best match, preferring pkg unit for yeasts
+          var m = preferredMatch(allMatches, sec);
           map[key] = { name: ing.name, needed: amount, unit: unit, sec: sec, match: m, stock: m ? getInvAmount(m.item) : 0 };
         }
       });
@@ -849,7 +882,8 @@ function renderScanConfirm() {
   var html = '';
   scannedIngredients.forEach(function(ing, i) {
     var cat = catMap[ing.type] || 'miscs';
-    var match = autoMatch(ing.name, cat);
+    var allMatches = autoMatchAll(ing.name, cat).concat(autoMatch(ing.name, cat) ? [autoMatch(ing.name, cat)] : []);
+    var match = preferredMatch(allMatches, cat) || autoMatch(ing.name, cat);
     var matchId = match ? (match.id + '|' + match.cat) : '';
 
     html += '<div class="ing-row" style="flex-wrap:wrap;gap:6px;align-items:flex-start;padding:10px 12px 8px">' +
