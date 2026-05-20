@@ -702,20 +702,45 @@ function proceed() {
 }
 
 // ── Check ──────────────────────────────────────────────────────────
-// Find possible substitutes for an ingredient based on shared keywords
+// Generic words that are not specific enough to suggest a substitution
+// Includes brewing terms AND common brand/maltster names
+var GENERIC_WORDS = [
+  // Brewing terms
+  'malt','grain','hop','hops','ale','lager','beer','yeast','wheat','barley',
+  'roasted','flaked','dried','light','dark','extra','special','premium',
+  'organic','pale','base','cara','crystal','caramel','pilsner','pilsen',
+  'munich','vienna','oat','oats','rye','adjunct','extract','maris','otter',
+  'saison','american','english','belgian','german','dutch','french',
+  // Yeast brands
+  'safale','saflager','safbrew','safebrew','lallemand','lalbrew','fermentis',
+  'wyeast','whitelabs','omega','imperial','mangrove','jacks','dry','liquid',
+  // Maltsters / hop brands
+  'castle','malting','dingemans','weyermann','briess','crisp','simpsons',
+  'muntons','thomas','fawcett','rahr','bestmalz','avangard','chateau',
+  'belgomalt','steinbach','lallemand','verdant','voss','nottingham',
+  'citra','mosaic','centennial','cascade','chinook','amarillo','galaxy',
+  'hallertau','saaz','tettnang','fuggle','golding'
+];
+
+// Find possible substitutes — only suggests items with meaningfully overlapping specific names
 function findSubstitutes(ing) {
   var subs = [];
-  var nameWords = ing.name.toLowerCase().split(/[^a-z0-9]+/).filter(function(w) { return w.length >= 4; });
+  var allWords = ing.name.toLowerCase().split(/[^a-z0-9]+/).filter(function(w) { return w.length >= 3; });
+  // Only keep words that are specific (not generic)
+  var specificWords = allWords.filter(function(w) { return GENERIC_WORDS.indexOf(w) === -1; });
+  // Need at least one specific word to suggest a substitute
+  if (specificWords.length === 0) return [];
+
   var items = inventory[ing.sec] || [];
   items.forEach(function(item) {
     if (!item.name) return;
-    // Skip the ingredient itself
     if (ing.match && item._id === ing.match.id) return;
     var stock = parseFloat(item.inventory) || 0;
     if (stock <= 0) return;
-    // Check if enough keyword overlap
-    var itemWords = item.name.toLowerCase().split(/[^a-z0-9]+/).filter(function(w) { return w.length >= 4; });
-    var shared = nameWords.filter(function(w) { return itemWords.indexOf(w) !== -1; });
+    var itemWords = item.name.toLowerCase().split(/[^a-z0-9]+/).filter(function(w) { return w.length >= 3; });
+    var itemSpecific = itemWords.filter(function(w) { return GENERIC_WORDS.indexOf(w) === -1; });
+    // Both must share at least one specific word
+    var shared = specificWords.filter(function(w) { return itemSpecific.indexOf(w) !== -1; });
     if (shared.length >= 1) {
       subs.push({ id: item._id, cat: ing.sec, item: item, stock: stock });
     }
