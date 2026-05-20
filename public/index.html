@@ -775,8 +775,37 @@ function renderCheck() {
         statusHtml = '<span class="ing-status warn">? unknown</span>';
       } else {
         var diff = ing.stock - ing.needed;
+        // Find all inventory items that match this ingredient by name
+        var allVariants = [];
+        var invItems = inventory[ing.sec] || [];
+        invItems.forEach(function(item) {
+          if (!item.name) return;
+          var nItem = norm(item.name);
+          var nIng = norm(ing.name);
+          // Match if names are similar (share core name)
+          if (nItem === nIng || nItem.includes(nIng) || nIng.includes(nItem) ||
+              norm(ing.match ? ing.match.item.name : '') === nItem) {
+            allVariants.push(item);
+          }
+        });
+        // Always include the matched item
+        if (ing.match && !allVariants.find(function(v) { return v._id === ing.match.id; })) {
+          allVariants.unshift(ing.match.item);
+        }
+
+        var variantHtml = '';
+        if (allVariants.length > 1) {
+          variantHtml = '<div style="margin-top:6px;width:100%">';
+          allVariants.forEach(function(v) {
+            var vStock = parseFloat(v.inventory) || 0;
+            var vColor = vStock > 0 ? '#4aaa70' : '#666';
+            variantHtml += '<div style="font-size:11px;color:' + vColor + ';margin-top:2px">· ' + esc(v.name) + (v.supplier ? ' (' + esc(v.supplier) + ')' : '') + ': ' + fmt(vStock) + ing.unit + '</div>';
+          });
+          variantHtml += '</div>';
+        }
+
         if (diff >= 0) {
-          statusHtml = '<span class="ing-status ok">✓ ' + fmt(ing.stock) + ing.unit + '</span>';
+          statusHtml = '<span class="ing-status ok">✓ ' + fmt(ing.stock) + ing.unit + ' in stock</span>';
         } else {
           var subs = findSubstitutes(ing);
           if (ing.stock > 0) {
@@ -789,8 +818,12 @@ function renderCheck() {
           }
         }
       }
-      html += '<div class="ing-row" style="flex-wrap:wrap"><div class="ing-name" style="width:100%">' + esc(ing.name) +
-        '<div class="ing-sub">need ' + fmt(ing.needed) + ing.unit + '</div></div><div style="width:100%">' + statusHtml + '</div></div>';
+      html += '<div class="ing-row" style="flex-wrap:wrap;align-items:flex-start">' +
+        '<div class="ing-name" style="flex:1">' + esc(ing.name) +
+        '<div class="ing-sub">need ' + fmt(ing.needed) + ing.unit + '</div></div>' +
+        '<div style="text-align:right">' + statusHtml + '</div>' +
+        (typeof variantHtml !== "undefined" ? variantHtml : '') +
+      '</div>';
     });
     html += '</div>';
   });
