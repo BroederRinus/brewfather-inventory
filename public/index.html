@@ -298,6 +298,17 @@ h1 { font-size: 20px; font-weight: 600; padding: 20px 0 4px 0; }
   <button class="btn btn-orange" id="setup-inv-btn" onclick="doGenerateBeerXML()">Generate BeerXML file →</button>
 </div>
 
+<!-- SUBSTITUTE -->
+<div id="screen-substitute" class="screen">
+  <button class="back" onclick="showScreen('screen-deduct')">← Back</button>
+  <h1>Substitutions needed</h1>
+  <p class="subtitle">You don't have enough of some ingredients. Did you substitute with something else?</p>
+  <div id="sub-list"></div>
+  <div id="sub-err" class="alert alert-err" style="display:none"></div>
+  <button class="btn btn-red" onclick="doDeductWithSubs()">Deduct from inventory →</button>
+  <button class="btn btn-small" onclick="showScreen('screen-home')">Cancel</button>
+</div>
+
 <!-- SUCCESS -->
 <div id="screen-success" class="screen">
   <div class="success">
@@ -691,6 +702,27 @@ function proceed() {
 }
 
 // ── Check ──────────────────────────────────────────────────────────
+// Find possible substitutes for an ingredient based on shared keywords
+function findSubstitutes(ing) {
+  var subs = [];
+  var nameWords = ing.name.toLowerCase().split(/[^a-z0-9]+/).filter(function(w) { return w.length >= 4; });
+  var items = inventory[ing.sec] || [];
+  items.forEach(function(item) {
+    if (!item.name) return;
+    // Skip the ingredient itself
+    if (ing.match && item._id === ing.match.id) return;
+    var stock = parseFloat(item.inventory) || 0;
+    if (stock <= 0) return;
+    // Check if enough keyword overlap
+    var itemWords = item.name.toLowerCase().split(/[^a-z0-9]+/).filter(function(w) { return w.length >= 4; });
+    var shared = nameWords.filter(function(w) { return itemWords.indexOf(w) !== -1; });
+    if (shared.length >= 1) {
+      subs.push({ id: item._id, cat: ing.sec, item: item, stock: stock });
+    }
+  });
+  return subs;
+}
+
 function renderCheck() {
   showScreen('screen-check');
   var nOk = 0, nWarn = 0, nBad = 0, nUnk = 0;
@@ -718,12 +750,22 @@ function renderCheck() {
         statusHtml = '<span class="ing-status warn">? unknown</span>';
       } else {
         var diff = ing.stock - ing.needed;
-        if (diff >= 0) statusHtml = '<span class="ing-status ok">✓ ' + fmt(ing.stock) + ing.unit + '</span>';
-        else if (ing.stock > 0) statusHtml = '<span class="ing-status warn">⚠ ' + fmt(Math.abs(diff)) + ing.unit + ' short</span>';
-        else statusHtml = '<span class="ing-status bad">✗ not in stock</span>';
+        if (diff >= 0) {
+          statusHtml = '<span class="ing-status ok">✓ ' + fmt(ing.stock) + ing.unit + '</span>';
+        } else {
+          var subs = findSubstitutes(ing);
+          if (ing.stock > 0) {
+            statusHtml = '<span class="ing-status warn">⚠ ' + fmt(Math.abs(diff)) + ing.unit + ' short</span>';
+          } else {
+            statusHtml = '<span class="ing-status bad">✗ not in stock</span>';
+          }
+          if (subs.length) {
+            statusHtml += '<div style="font-size:11px;color:#4aaa70;margin-top:3px">↔ sub available: ' + subs.map(function(s) { return esc(s.item.name) + ' (' + fmt(s.stock) + ing.unit + ')'; }).join(', ') + '</div>';
+          }
+        }
       }
-      html += '<div class="ing-row"><div class="ing-name">' + esc(ing.name) +
-        '<div class="ing-sub">need ' + fmt(ing.needed) + ing.unit + '</div></div>' + statusHtml + '</div>';
+      html += '<div class="ing-row" style="flex-wrap:wrap"><div class="ing-name" style="width:100%">' + esc(ing.name) +
+        '<div class="ing-sub">need ' + fmt(ing.needed) + ing.unit + '</div></div><div style="width:100%">' + statusHtml + '</div></div>';
     });
     html += '</div>';
   });
@@ -777,9 +819,83 @@ function renderDeduct() {
   document.getElementById('deduct-err').style.display = 'none';
 }
 
+// Stores ingredients that need substitution
+var pendingSubs = [];
+
 async function doDeduct() {
   var errEl = document.getElementById('deduct-err');
   errEl.style.display = 'none';
+  pendingSubs = [];
+
+  // First pass: check for shortages before deducting anything
+  var shortages = [];
+  for (var i = 0; i < merged.length; i++) {
+    var ing = merged[i];
+    if (!ing.match) continue;
+    var inputEl = document.getElementById('d-' + i);
+    if (!inputEl) continue;
+    var amount = parseFloat(inputEl.value) || 0;
+    if (amount <= 0) continue;
+    if (ing.stock < amount) {
+      shortages.push({ ing: ing, idx: i, amount: amount });
+    }
+  }
+
+  // If there are shortages, check if substitutes exist and show sub screen
+  var subsNeeded = shortages.filter(function(s) {
+    return findSubstitutes(s.ing).length > 0;
+  });
+
+  if (subsNeeded.length > 0) {
+    renderSubScreen(subsNeeded);
+    showScreen('screen-substitute');
+    return;
+  }
+
+  // No substitutes needed, just deduct
+  await executeDeduct();
+}
+
+function renderSubScreen(subsNeeded) {
+  var html = '';
+  subsNeeded.forEach(function(s, i) {
+    var subs = findSubstitutes(s.ing);
+    var shortage = s.amount - s.ing.stock;
+    html += '<div class="ing-row" style="flex-wrap:wrap;padding:12px">' +
+      '<div style="width:100%;margin-bottom:8px">' +
+        '<div style="font-size:14px;font-weight:500">' + esc(s.ing.name) + '</div>' +
+        '<div class="ing-sub">you have ' + fmt(s.ing.stock) + s.ing.unit + ', need ' + fmt(s.amount) + s.ing.unit + ' — ' + fmt(shortage) + s.ing.unit + ' short</div>' +
+      '</div>' +
+      '<select id="sub-sel-' + i + '" data-idx="' + s.idx + '" data-shortage="' + shortage + '" style="width:100%;background:#111;border:1px solid #444;border-radius:6px;color:#eee;font-size:13px;padding:7px 10px;outline:none">' +
+      '<option value="">— no substitution, deduct what I have —</option>' +
+      subs.map(function(sub) {
+        return '<option value="' + sub.id + '|' + sub.cat + '">' + esc(sub.item.name) + ' (' + fmt(sub.stock) + s.ing.unit + ' in stock)</option>';
+      }).join('') +
+      '</select>' +
+    '</div>';
+  });
+  document.getElementById('sub-list').innerHTML = html;
+  window._subsNeeded = subsNeeded;
+}
+
+async function doDeductWithSubs() {
+  var subsNeeded = window._subsNeeded || [];
+  // Read substitute selections
+  subsNeeded.forEach(function(s, i) {
+    var sel = document.getElementById('sub-sel-' + i);
+    if (sel && sel.value) {
+      var parts = sel.value.split('|');
+      s.subId = parts[0];
+      s.subCat = parts[1];
+      s.shortage = parseFloat(sel.dataset.shortage) || 0;
+    }
+  });
+  await executeDeduct(subsNeeded);
+}
+
+async function executeDeduct(subsNeeded) {
+  subsNeeded = subsNeeded || [];
+  var errEl = document.getElementById('deduct-err') || document.getElementById('sub-err');
   var deducted = 0, failed = 0, failedNames = [];
 
   for (var i = 0; i < merged.length; i++) {
@@ -789,19 +905,32 @@ async function doDeduct() {
     if (!inputEl) continue;
     var amount = parseFloat(inputEl.value) || 0;
     if (amount <= 0) continue;
+
+    // Check if this ingredient has a substitution
+    var subEntry = subsNeeded.find(function(s) { return s.idx === i && s.subId; });
+
     var ok = false;
-    var deductBody = { inventory_adjust: -amount };
-    if (ing.match.cat === 'yeasts') deductBody.unit = 'pkg';
-    var payloads = [deductBody, { adjustAmount: -amount }];
-    for (var p = 0; p < payloads.length; p++) {
-      try { await api('/inventory/' + ing.match.cat + '/' + ing.match.id, 'PATCH', payloads[p]); ok = true; break; } catch(e) {}
+    var deductAmount = subEntry ? ing.stock : amount; // if subbing, only deduct what we have
+    if (deductAmount > 0) {
+      var payloads = [{ inventory_adjust: -deductAmount }, { adjustAmount: -deductAmount }];
+      for (var p = 0; p < payloads.length; p++) {
+        try { await api('/inventory/' + ing.match.cat + '/' + ing.match.id, 'PATCH', payloads[p]); ok = true; break; } catch(e) {}
+      }
+    } else { ok = true; } // nothing to deduct from original
+
+    // Deduct shortage from substitute
+    if (subEntry && subEntry.subId) {
+      var subPayloads = [{ inventory_adjust: -subEntry.shortage }, { adjustAmount: -subEntry.shortage }];
+      for (var p = 0; p < subPayloads.length; p++) {
+        try { await api('/inventory/' + subEntry.subCat + '/' + subEntry.subId, 'PATCH', subPayloads[p]); break; } catch(e) {}
+      }
     }
+
     if (ok) deducted++; else { failed++; failedNames.push(ing.name); }
   }
 
   if (deducted === 0 && failed > 0) {
-    errEl.textContent = 'All deductions failed. Check that your API key has inventory write permission. Failed: ' + failedNames.join(', ');
-    errEl.style.display = 'block';
+    if (errEl) { errEl.textContent = 'All deductions failed. Check API key permissions.'; errEl.style.display = 'block'; }
     return;
   }
   var msg = deducted + ' ingredient' + (deducted !== 1 ? 's' : '') + ' deducted.';
@@ -925,6 +1054,28 @@ function removeScanRow(i) {
   renderScanConfirm();
 }
 
+// Convert amount from Gemini's unit to the unit Brewfather has stored
+function convertToInventoryUnit(amount, fromUnit, toUnit) {
+  if (!fromUnit || !toUnit || fromUnit === toUnit) return amount;
+  fromUnit = fromUnit.toLowerCase();
+  toUnit = toUnit.toLowerCase();
+
+  // Convert everything to grams first
+  var toGrams = {
+    'g': 1, 'kg': 1000, 'oz': 28.35, 'lb': 453.59,
+    'mg': 0.001, 'ml': 1, 'l': 1000,
+    'pkg': 1, 'items': 1, 'drops': 1
+  };
+  var fromGrams = {
+    'g': 1, 'kg': 0.001, 'oz': 0.03527, 'lb': 0.002205,
+    'mg': 1000, 'ml': 1, 'l': 0.001,
+    'pkg': 1, 'items': 1, 'drops': 1
+  };
+
+  var inGrams = amount * (toGrams[fromUnit] || 1);
+  return inGrams * (fromGrams[toUnit] || 1);
+}
+
 async function doAddToInventory() {
   var errEl = document.getElementById('scan-confirm-err');
   errEl.style.display = 'none';
@@ -951,20 +1102,14 @@ async function doAddToInventory() {
     localStorage.setItem('bf_links', JSON.stringify(links));
 
     var ok = false;
-    var unit = ing.unit || 'g';
-    // First correct the unit on the inventory item, then add stock
-    try { await api('/inventory/' + invCat + '/' + invId, 'PATCH', { unit: unit }); } catch(e) {}
-    // Now fetch current stock and set the new total
-    var currentStock = 0;
-    try {
-      var current = await api('/inventory/' + invCat + '/' + invId);
-      currentStock = parseFloat(current.inventory) || 0;
-    } catch(e) {}
-    var payloads = [
-      { inventory: currentStock + amount, unit: unit },
-      { inventory_adjust: amount, unit: unit },
-      { adjustAmount: amount }
-    ];
+    var scannedUnit = ing.unit || 'g';
+    // Read the unit Brewfather has stored for this item
+    var invItem = (inventory[invCat] || []).find(function(it) { return it._id === invId; });
+    var invUnit = invItem ? (invItem.unit || scannedUnit) : scannedUnit;
+    // Convert the scanned amount to the inventory unit
+    var convertedAmount = convertToInventoryUnit(amount, scannedUnit, invUnit);
+    convertedAmount = parseFloat(convertedAmount.toFixed(3));
+    var payloads = [{ inventory_adjust: convertedAmount }, { adjustAmount: convertedAmount }];
     for (var p = 0; p < payloads.length; p++) {
       try { await api('/inventory/' + invCat + '/' + invId, 'PATCH', payloads[p]); ok = true; break; } catch(e) {}
     }
