@@ -794,12 +794,12 @@ function renderCheck() {
         }
 
         var variantHtml = '';
-        if (allVariants.length > 1) {
+        var variantsInStock = allVariants.filter(function(v) { return (parseFloat(v.inventory) || 0) > 0; });
+        if (variantsInStock.length > 0) {
           variantHtml = '<div style="margin-top:6px;width:100%">';
-          allVariants.forEach(function(v) {
+          variantsInStock.forEach(function(v) {
             var vStock = parseFloat(v.inventory) || 0;
-            var vColor = vStock > 0 ? '#4aaa70' : '#666';
-            variantHtml += '<div style="font-size:11px;color:' + vColor + ';margin-top:2px">· ' + esc(v.name) + (v.supplier ? ' (' + esc(v.supplier) + ')' : '') + ': ' + fmt(vStock) + ing.unit + '</div>';
+            variantHtml += '<div style="font-size:11px;color:#4aaa70;margin-top:2px">· ' + esc(v.name) + (v.supplier ? ' (' + esc(v.supplier) + ')' : '') + ': ' + fmt(vStock) + ing.unit + '</div>';
           });
           variantHtml += '</div>';
         }
