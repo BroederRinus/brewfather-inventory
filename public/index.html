@@ -647,7 +647,12 @@ function buildMerged() {
           var m = preferredMatch(allMatches, sec);
           // Use unit from inventory item if available, otherwise fall back to recipe unit
           var unit = m ? (m.item.unit || (sec === 'yeasts' ? 'pkg' : 'g')) : (sec === 'yeasts' ? 'pkg' : 'g');
-          map[key] = { name: ing.name, needed: amount, unit: unit, sec: sec, match: m, stock: m ? getInvAmount(m.item) : 0 };
+          // Convert yeast amount: recipe stores in grams, inventory in pkg (1 pkg = 11g)
+          var neededAmount = amount;
+          if (sec === 'yeasts' && unit === 'pkg') {
+            neededAmount = parseFloat((amount / 11).toFixed(2));
+          }
+          map[key] = { name: ing.name, needed: neededAmount, unit: unit, sec: sec, match: m, stock: m ? getInvAmount(m.item) : 0 };
         }
       });
     });
@@ -808,11 +813,11 @@ function renderCheck() {
         var variantsInStockTotal = variantsInStock.reduce(function(sum, v) { return sum + (parseFloat(v.inventory) || 0); }, 0);
         if (diff >= 0) {
           statusHtml = '<span class="ing-status ok">✓ ' + fmt(ing.stock) + ing.unit + ' in stock</span>';
-        } else if (!ing.match && variantsInStock.length > 0) {
-          // No direct match but variants exist — show total from variants
+        } else if (variantsInStock.length > 0 && (!ing.match || ing.stock === 0)) {
+          // No direct match but variants exist — show total from variants, skip substitute suggestions
           var variantDiff = variantsInStockTotal - ing.needed;
           if (variantDiff >= 0) {
-            statusHtml = '<span class="ing-status ok">✓ ' + fmt(variantsInStockTotal) + ing.unit + ' available (via variants)</span>';
+            statusHtml = '<span class="ing-status ok">✓ ' + fmt(variantsInStockTotal) + ing.unit + ' available (via variants below)</span>';
           } else {
             statusHtml = '<span class="ing-status warn">⚠ ' + fmt(Math.abs(variantDiff)) + ing.unit + ' short (across variants)</span>';
           }
@@ -979,6 +984,10 @@ async function executeDeduct(subsNeeded) {
 
     var ok = false;
     var deductAmount = subEntry ? ing.stock : amount; // if subbing, only deduct what we have
+    // Convert yeast grams to pkg if inventory stores as pkg (1 pkg = 11g)
+    if (ing.match.cat === 'yeasts' && ing.match.item && (ing.match.item.unit || '') === 'pkg' && deductAmount > 2) {
+      deductAmount = parseFloat((deductAmount / 11).toFixed(2));
+    }
     if (deductAmount > 0) {
       var payloads = [{ inventory_adjust: -deductAmount }, { adjustAmount: -deductAmount }];
       for (var p = 0; p < payloads.length; p++) {
