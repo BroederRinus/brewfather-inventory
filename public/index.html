@@ -458,9 +458,17 @@ var aDefault = a.id.startsWith('default-') ? 1 : 0;
 function norm(s) { return (s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
 
 function autoMatchAll(name, preferredCat) {
+  // Check saved link first — return just that if found
+  var nName = norm(name);
+  var saved = links[name] || links[nName];
+  if (saved) {
+    var savedItems = inventory[saved.cat] || [];
+    for (var si = 0; si < savedItems.length; si++) {
+      if (savedItems[si]._id === saved.id) return [{ id: savedItems[si]._id, cat: saved.cat, item: savedItems[si] }];
+    }
+  }
   // Returns ALL matching inventory items, not just the first
   var results = [];
-  var nName = norm(name);
   var allCats = preferredCat
     ? [preferredCat].concat(Object.keys(inventory).filter(function(c) { return c !== preferredCat; }))
     : Object.keys(inventory);
@@ -477,14 +485,15 @@ function autoMatchAll(name, preferredCat) {
 }
 
 function autoMatch(name, preferredCat) {
-  var saved = links[name];
+  var nName = norm(name);
+  // Check saved links by exact name, then normalized name
+  var saved = links[name] || links[nName];
   if (saved) {
     var cat = inventory[saved.cat] || [];
     for (var i = 0; i < cat.length; i++) {
       if (cat[i]._id === saved.id) return { id: cat[i]._id, cat: saved.cat, item: cat[i] };
     }
   }
-  var nName = norm(name);
   var searchCats = preferredCat ? [preferredCat] : Object.keys(inventory);
   // Try preferred category first, then all
   var allCats = preferredCat
@@ -718,7 +727,9 @@ function onLinkDone() {
     if (!el || !el.value) return;
     var parts = el.value.split('|');
     var invId = parts[0]; var invCat = parts[1];
+    // Save by exact name AND normalized name for fuzzy future matching
     links[ing.name] = { id: invId, cat: invCat };
+    links[norm(ing.name)] = { id: invId, cat: invCat };
     var entry = merged.find(function(m) { return m.name === ing.name && m.sec === ing.sec; });
     if (entry) {
       var item = (inventory[invCat] || []).find(function(it) { return it._id === invId; });
@@ -1215,8 +1226,9 @@ async function doAddToInventory() {
     var parts = invVal.split('|');
     var invId = parts[0]; var invCat = parts[1];
 
-    // Save link for future
+    // Save link by exact name AND normalized name for fuzzy future matching
     links[ing.name] = { id: invId, cat: invCat };
+    links[norm(ing.name)] = { id: invId, cat: invCat };
     localStorage.setItem('bf_links', JSON.stringify(links));
 
     var ok = false;
