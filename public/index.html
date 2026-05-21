@@ -433,7 +433,8 @@ function preferredMatch(matches, sec) {
     var bStock = parseFloat(b.item.inventory) || 0;
     if (bStock !== aStock) return bStock - aStock; // higher stock first
     // Prefer non-default entries (user-created)
-    var aDefault = a.id.startsWith('default-') ? 1 : 0;
+    var pkgUnits = ['pkg','pakje','packet','pack'];
+var aDefault = a.id.startsWith('default-') ? 1 : 0;
     var bDefault = b.id.startsWith('default-') ? 1 : 0;
     return aDefault - bDefault;
   });
@@ -649,7 +650,7 @@ function buildMerged() {
           var unit = m ? (m.item.unit || (sec === 'yeasts' ? 'pkg' : 'g')) : (sec === 'yeasts' ? 'pkg' : 'g');
           // Convert yeast amount: recipe stores in grams, inventory in pkg (1 pkg = 11g)
           var neededAmount = amount;
-          if (sec === 'yeasts' && unit === 'pkg') {
+          if (sec === 'yeasts' && (unit === 'pkg' || unit === 'pakje' || unit === 'packet' || unit === 'pack')) {
             neededAmount = parseFloat((amount / 11).toFixed(2));
           }
           map[key] = { name: ing.name, needed: neededAmount, unit: unit, sec: sec, match: m, stock: m ? getInvAmount(m.item) : 0 };
@@ -662,9 +663,21 @@ function buildMerged() {
 
 // ── Linking ────────────────────────────────────────────────────────
 function renderLinkScreen(unmatched) {
+  // Build deduplicated options — same name+supplier = only show one (prefer non-default)
+  var seen = {};
   var allOptions = [];
   Object.keys(inventory).forEach(function(cat) {
-    (inventory[cat] || []).forEach(function(item) { allOptions.push({ cat: cat, item: item }); });
+    (inventory[cat] || []).forEach(function(item) {
+      var dedupeKey = (item.name || '').toLowerCase() + '|' + (item.supplier || '').toLowerCase() + '|' + cat;
+      if (seen[dedupeKey]) {
+        // Keep non-default over default
+        if (item._id.startsWith('default-')) return;
+        seen[dedupeKey].item = item; // replace with non-default
+      } else {
+        seen[dedupeKey] = { cat: cat, item: item };
+        allOptions.push(seen[dedupeKey]);
+      }
+    });
   });
   allOptions.sort(function(a, b) { return a.item.name.localeCompare(b.item.name); });
 
@@ -985,7 +998,8 @@ async function executeDeduct(subsNeeded) {
     var ok = false;
     var deductAmount = subEntry ? ing.stock : amount; // if subbing, only deduct what we have
     // Convert yeast grams to pkg if inventory stores as pkg (1 pkg = 11g)
-    if (ing.match.cat === 'yeasts' && ing.match.item && (ing.match.item.unit || '') === 'pkg' && deductAmount > 2) {
+    var yeastUnit = (ing.match.item ? ing.match.item.unit : '') || '';
+if (ing.match.cat === 'yeasts' && ['pkg','pakje','packet','pack'].indexOf(yeastUnit) !== -1 && deductAmount > 2) {
       deductAmount = parseFloat((deductAmount / 11).toFixed(2));
     }
     if (deductAmount > 0) {
@@ -1087,9 +1101,21 @@ async function doScan() {
 
 function renderScanConfirm() {
   var catMap = { fermentable: 'fermentables', hop: 'hops', yeast: 'yeasts' };
+  // Build deduplicated options — same name+supplier = only show one (prefer non-default)
+  var seen = {};
   var allOptions = [];
   Object.keys(inventory).forEach(function(cat) {
-    (inventory[cat] || []).forEach(function(item) { allOptions.push({ cat: cat, item: item }); });
+    (inventory[cat] || []).forEach(function(item) {
+      var dedupeKey = (item.name || '').toLowerCase() + '|' + (item.supplier || '').toLowerCase() + '|' + cat;
+      if (seen[dedupeKey]) {
+        // Keep non-default over default
+        if (item._id.startsWith('default-')) return;
+        seen[dedupeKey].item = item; // replace with non-default
+      } else {
+        seen[dedupeKey] = { cat: cat, item: item };
+        allOptions.push(seen[dedupeKey]);
+      }
+    });
   });
   allOptions.sort(function(a, b) { return a.item.name.localeCompare(b.item.name); });
 
@@ -1115,7 +1141,8 @@ function renderScanConfirm() {
         allOptions.map(function(o) {
           var val = o.item._id + '|' + o.cat;
           var sel = (val === matchId) ? ' selected' : '';
-          return '<option value="' + val + '"' + sel + '>' + esc(o.item.name) + ' (' + o.cat + ')<\/option>';
+          var label = esc(o.item.name) + (o.item.supplier ? ' — ' + esc(o.item.supplier) : '') + ' (' + o.cat + ')';
+        return '<option value="' + val + '"' + sel + '>' + label + '<\/option>';
         }).join('') +
       '<\/select>' +
       (match
@@ -1141,12 +1168,12 @@ function convertToInventoryUnit(amount, fromUnit, toUnit) {
   var toGrams = {
     'g': 1, 'kg': 1000, 'oz': 28.35, 'lb': 453.59,
     'mg': 0.001, 'ml': 1, 'l': 1000,
-    'pkg': 1, 'items': 1, 'drops': 1
+    'pkg': 1, 'pakje': 1, 'packet': 1, 'pack': 1, 'items': 1, 'drops': 1
   };
   var fromGrams = {
     'g': 1, 'kg': 0.001, 'oz': 0.03527, 'lb': 0.002205,
     'mg': 1000, 'ml': 1, 'l': 0.001,
-    'pkg': 1, 'items': 1, 'drops': 1
+    'pkg': 1, 'pakje': 1, 'packet': 1, 'pack': 1, 'items': 1, 'drops': 1
   };
 
   var inGrams = amount * (toGrams[fromUnit] || 1);
@@ -1183,9 +1210,10 @@ async function doAddToInventory() {
     // Read the unit Brewfather has stored for this item
     var invItem = (inventory[invCat] || []).find(function(it) { return it._id === invId; });
     var invUnit = invItem ? (invItem.unit || scannedUnit) : scannedUnit;
-    // Convert the scanned amount to the inventory unit
+    // Convert the scanned amount to match what Brewfather stores
     var convertedAmount = convertToInventoryUnit(amount, scannedUnit, invUnit);
     convertedAmount = parseFloat(convertedAmount.toFixed(3));
+    // Never send unit field — Brewfather ignores it and changes it unpredictably
     var payloads = [{ inventory_adjust: convertedAmount }, { adjustAmount: convertedAmount }];
     for (var p = 0; p < payloads.length; p++) {
       try { await api('/inventory/' + invCat + '/' + invId, 'PATCH', payloads[p]); ok = true; break; } catch(e) {}
