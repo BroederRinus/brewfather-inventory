@@ -254,7 +254,7 @@ h1 { font-size: 20px; font-weight: 600; padding: 20px 0 4px 0; }
 <div id="screen-deduct" class="screen">
   <button class="back" onclick="showScreen('screen-home')">← Back to menu</button>
   <h1>Deduct from inventory</h1>
-  <p class="subtitle">Adjust amounts if needed, then deduct. Only hops, fermentables and yeast are included.</p>
+  <p class="subtitle">Adjust amounts if needed, then deduct. Brewing salts and lactic acid are excluded.</p>
   <div id="deduct-warn"></div>
   <div id="deduct-body"></div>
   <div id="deduct-err" class="alert alert-err" style="display:none"></div>
@@ -336,8 +336,21 @@ var pendingImageBase64 = '';
 var pendingMimeType    = '';
 
 // Only these sections get deducted / checked
-var ACTIVE_SECTIONS = ['fermentables', 'hops', 'yeasts'];
-var SEC_LABELS = { fermentables: 'Fermentables', hops: 'Hops', yeasts: 'Yeasts' };
+var ACTIVE_SECTIONS = ['fermentables', 'hops', 'yeasts', 'miscs'];
+
+// Misc ingredients to always exclude (brewing salts and acids)
+var EXCLUDED_MISCS = [
+  'calcium chloride','gypsum','calcium sulfate','magnesium chloride',
+  'sodium chloride','natrium chloride','table salt','lactic acid',
+  'cacl2','caso4','mgcl2','nacl','chalk','calcium carbonate',
+  'baking soda','sodium bicarbonate','epsom salt','magnesium sulfate'
+];
+
+function isExcludedMisc(name) {
+  var n = (name || '').toLowerCase();
+  return EXCLUDED_MISCS.some(function(e) { return n.includes(e); });
+}
+var SEC_LABELS = { fermentables: 'Fermentables', hops: 'Hops', yeasts: 'Yeasts', miscs: 'Other ingredients' };
 
 // ── Screen routing ─────────────────────────────────────────────────
 function showScreen(id) {
@@ -626,6 +639,7 @@ function buildMerged() {
   recipeDetails.forEach(function(recipe) {
     ACTIVE_SECTIONS.forEach(function(sec) {
       (recipe[sec] || []).forEach(function(ing) {
+        if (sec === 'miscs' && isExcludedMisc(ing.name)) return;
         var amount = sec === 'fermentables' ? (ing.amount || 0) * 1000 : (ing.amount || 0);
         var key    = sec + '|' + ing._id;
         if (map[key]) {
